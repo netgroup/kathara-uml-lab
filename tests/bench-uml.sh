@@ -5,12 +5,12 @@
 # as in a Kathara UML device: in a container of the device image, with
 # hostfs on the container's /.
 #
-#   bench-uml.sh <UML kernel> [image]     (image default kathara-uml/base-ssh)
+#   bench-uml.sh <UML kernel> [image]     (image default kathara/base)
 #
 # Prints lines "BENCH <where> <test> <seconds>". BENCH_RUNS (default 1)
 # repeats the whole set, to see the spread.
 KERNEL=$(cd "$(dirname "$1")" 2>/dev/null && pwd)/$(basename "$1")
-IMAGE=${2:-kathara-uml/base-ssh}
+IMAGE=${2:-kathara/base}
 [ -f "$KERNEL" ] || { echo "usage: $0 <UML kernel> [image]" >&2; exit 1; }
 
 # The tests: only dd, bash and awk, which every image has.

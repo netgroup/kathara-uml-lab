@@ -2,15 +2,11 @@
 
 ## Devices
 
-- [ ] **Any image, no ssh client needed.** ushell needs an ssh client and
-      the UML needs sshd, so a UML device today needs
-      `kathara-uml/base-ssh` (kathara/base plus openssh-client). Ship a
-      static dropbear instead (one binary: `dropbear` server in the UML,
-      `dbclient` for ushell, `dropbearkey`), copied into the container
-      with the helpers. A prototype, dropbear 2026.94 built with musl,
-      static, password login off, GPG signature checked, is in
-      `out/dropbear` (not in git): integrate it in UmlHelpers.py and
-      build.sh, then run the lab tests with plain `kathara/base`.
+- [ ] **Images without OpenSSH** (low priority). The UML runs on the
+      image of the device, and the Kathara images seen (kathara/base,
+      kathara/frr) have the OpenSSH client and server, iproute2 and glibc.
+      Only for an image without OpenSSH: a static dropbear (prototype in
+      `out/dropbear`, not in git) copied with the helpers.
 - [ ] **Kernel modules.** UML supports them (`CONFIG_MODULES=y` in
       `arch/um/configs/x86_64_defconfig`); base.fragment turns them off.
       1. build.sh checks every option of every fragment, so a fragment

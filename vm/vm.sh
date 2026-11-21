@@ -87,7 +87,6 @@ do_install()
 		/opt/kathara/bin/pip install -q /opt/kathara-uml/kathara >/tmp/pip.log
 		printf "#!/bin/sh\nexec /opt/kathara/bin/python /opt/kathara-uml/kathara/src/kathara.py \"\$@\"\n" > /usr/local/bin/kathara
 		chmod 755 /usr/local/bin/kathara
-		docker build -q -t kathara-uml/base-ssh /opt/kathara-uml/image >/dev/null
 		echo "installed: $(kathara --version | tail -1), Docker $(docker version --format "{{.Server.Version}}")"
 		ls -l /opt/kathara-uml/out/kernel/linux 2>/dev/null || echo "no UML kernel: run uml-kernel/build.sh first"' < "$tar"
 }

@@ -28,13 +28,13 @@ One line in `lab.conf`:
 ```
 r[0]="A"
 r[1]="B"
-r[image]="kathara-uml/base-ssh"
+r[image]="kathara/base"
 r[kernel]="/path/to/linux"
 ```
 
 `kernel` is a UML kernel binary. A relative path is relative to the
-directory `kathara` runs in, as for `volume`. `image` must have an ssh
-client (see [Image](#image)).
+directory `kathara` runs in, as for `volume`. `image` must have the
+OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
 
 [examples/router](examples/router) is a complete lab: `a` and `b` are
 containers, `r` is a router on a UML kernel, and its `r.startup` is a
@@ -153,13 +153,11 @@ it is. With `--src` no patch is applied: the tree is the caller's.
 
 ## Image
 
-`ushell` needs an ssh client in the image, and the UML needs `sshd`,
-`ip` and `bash`. `kathara/base` has `sshd` but no client:
-[image/Dockerfile](image/Dockerfile) adds it.
-
-```
-docker build -t kathara-uml/base-ssh image
-```
+`ushell` runs the ssh client of the image, and the UML runs its `sshd`,
+`ip` and `bash`. `kathara/base` has them all: openssh-client and
+openssh-server 9.2p1-2+deb12u7 in the `kathara/base` of 2026-03-22
+(`sha256:8a2e70ac8f51`), with its host keys in `/etc/ssh`. An image
+without OpenSSH does not work yet (see [TODO.md](TODO.md)).
 
 ## Test VM
 
