@@ -1,0 +1,4 @@
+[submodule "kathara"]
+	path = kathara
+	url = https://github.com/netgroup/Kathara.git
+	branch = uml-kernel

@@ -1,7 +1,8 @@
 # UML devices: a device on its own Linux kernel
 
 Kathara devices are containers, so they all share the kernel of the host.
-With this branch a device can run on its own kernel instead: a
+With the Kathara of [kathara](kathara) a device can run on its own kernel
+instead: a
 [User-Mode Linux](https://docs.kernel.org/virt/uml/user_mode_linux_howto_v2.html)
 (UML) kernel, which runs as a process inside the device's container. The
 rest of the lab does not change: the other devices are plain containers,
@@ -10,6 +11,15 @@ shared folders work as for any device.
 
 Use it to put different kernels in the same network: a patched kernel next
 to a stock one, two kernel versions, a feature that only some nodes have.
+
+[kathara](kathara) is a submodule: a fork of Kathara, branch `uml-kernel`,
+with the changes to Kathara itself. The rest of this repository builds
+what a UML device needs (kernel, image) and tests it. Clone it with the
+submodule:
+
+```
+git clone --recurse-submodules <this repository>
+```
 
 ## Usage
 
@@ -33,13 +43,13 @@ normal startup file that configures `eth0` and `eth1`.
 ## How it works
 
 For a device with `kernel`, Kathara
-([DockerMachine.py](../src/Kathara/manager/docker/DockerMachine.py)):
+([DockerMachine.py](kathara/src/Kathara/manager/docker/DockerMachine.py)):
 
 1. creates the container with the kernel mounted read-only in
    `/kathara-uml-kernel`, the entrypoint `/kathara-uml/start`, the shell
    `/kathara-uml/ushell`, the label `uml` and `KATHARA_UML_IFACES` (the
    number of interfaces), and copies the helpers of
-   [UmlHelpers.py](../src/Kathara/manager/docker/UmlHelpers.py) into
+   [UmlHelpers.py](kathara/src/Kathara/manager/docker/UmlHelpers.py) into
    `/kathara-uml`;
 2. after attaching every interface, touches `/run/kathara-uml.go`;
 3. runs `kathara exec` through the device shell.
