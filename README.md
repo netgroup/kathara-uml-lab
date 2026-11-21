@@ -111,6 +111,12 @@ newer glibc it fails on bookworm based images such as `kathara/base`
 A static UML is not an option: `STATIC_LINK` depends on
 `!MAY_HAVE_RUNTIME_DEPS`, which the vector driver selects.
 
+With `--fetch X.Y.Z`, build.sh applies the patches listed in
+`kernel/patches/X.Y/series`, in order, if that directory exists; a patch
+that does not apply stops the build. `--no-patches` builds the release as
+it is. With `--src` no patch is applied: the tree is the caller's.
+`BUILD-INFO` lists the patches applied.
+
 ## Image
 
 `ushell` needs an ssh client in the image, and the UML needs `sshd`,

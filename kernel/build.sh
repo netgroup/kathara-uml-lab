@@ -4,12 +4,16 @@
 # lab uses with dev[kernel]="<path>".
 #
 #   build.sh --src <kernel tree> [--fragment <file>]... [--out <dir>]
-#   build.sh --fetch <version>   [--fragment <file>]... [--out <dir>]
+#   build.sh --fetch <version>   [--fragment <file>]... [--out <dir>] [--no-patches]
 #
 # --src      an existing kernel tree, mounted read-only (it is not touched:
 #            the build goes to <out>/build with O=).
 # --fetch    download linux-<version>.tar.xz from kernel.org into <out>
-#            and build that (for example --fetch 6.18).
+#            and build that (for example --fetch 7.3.5), with the patches of
+#            patches/<major>.<minor>/series (next to this script) applied in
+#            order, if that directory exists.
+# --no-patches  with --fetch, apply none of them. With --src no patch is
+#            applied either: the tree is the caller's.
 # --fragment Kconfig fragments merged on top of `make ARCH=um defconfig`,
 #            in the given order. base.fragment (next to this script) is
 #            always the first one. Every option of every fragment must stick,
@@ -27,7 +31,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 UML_DIR=$(dirname "$HERE")
 WORK=${UML_LAB_WORK:-$UML_DIR/out}
 OUT=$WORK/kernel
-SRC= FETCH=
+SRC= FETCH= NO_PATCHES=
 FRAGS=("$HERE/base.fragment")
 
 while [ $# -gt 0 ]; do
@@ -36,6 +40,7 @@ while [ $# -gt 0 ]; do
 	--fetch) FETCH=$2; shift 2 ;;
 	--fragment) [ -f "$2" ] || die "no fragment $2"; FRAGS+=("$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"); shift 2 ;;
 	--out) OUT=$2; shift 2 ;;
+	--no-patches) NO_PATCHES=1; shift ;;
 	*) die "unknown argument $1" ;;
 	esac
 done
@@ -53,6 +58,7 @@ IMAGE=localhost/kathara-uml-kernel-builder
 
 # The fragments go into the container as /frag/<n>-<name>, in order.
 mounts=(-v "$OUT:/out:Z")
+[ -d "$HERE/patches" ] && mounts+=(-v "$HERE/patches:/patches:ro,Z")
 i=0
 for f in "${FRAGS[@]}"; do
 	mounts+=(-v "$f:/frag/$i-$(basename "$f"):ro,Z")
@@ -62,7 +68,7 @@ if [ -n "$SRC" ]; then
 	mounts+=(-v "$SRC:/src:ro,Z")
 fi
 
-"${PM[@]}" run --rm -e FETCH="$FETCH" -e JOBS="${JOBS:-$(nproc)}" "${mounts[@]}" $IMAGE bash -c '
+"${PM[@]}" run --rm -e FETCH="$FETCH" -e NO_PATCHES="$NO_PATCHES" -e JOBS="${JOBS:-$(nproc)}" "${mounts[@]}" $IMAGE bash -c '
 set -o pipefail
 die() { echo "build.sh (container): $*" >&2; exit 1; }
 S=/src
@@ -76,6 +82,13 @@ if [ -n "$FETCH" ]; then
 		die "download of $tarball failed"
 	rm -rf /out/src && mkdir -p /out/src && tar -C /out/src -xf /out/$tarball || die "untar failed"
 	S=/out/src/linux-$FETCH
+	series=/patches/$(echo $FETCH | cut -d. -f1-2)/series
+	if [ -z "$NO_PATCHES" ] && [ -f $series ]; then
+		for p in $(grep -v "^#" $series); do
+			git -C $S apply $(dirname $series)/$p || die "patch $p does not apply"
+			patches="$patches $p"
+		done
+	fi
 fi
 # A fresh build directory: objects of another tree or version could look
 # newer than the sources and not be rebuilt.
@@ -107,6 +120,7 @@ glibc=$(objdump -T /out/linux | grep -o "GLIBC_[0-9.]*" | sort -uV | tail -1)
 	echo "release: $(make -s -C $S O=$O ARCH=um kernelrelease)"
 	echo "source: ${FETCH:+kernel.org linux-$FETCH}$(git -C $S describe --always --dirty 2>/dev/null)"
 	echo "fragments: $(cd /frag && ls | sort -n | tr "\n" " ")"
+	echo "patches:${patches:- none}"
 	echo "glibc needed: $glibc"
 	echo "built in: $(. /etc/os-release; echo $PRETTY_NAME), $(gcc --version | head -1)"
 	sha256sum /out/linux | sed "s|/out/||"
