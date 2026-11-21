@@ -86,7 +86,8 @@ r[env]="KATHARA_UML_SECCOMP=off"
 
 `/var/log/uml-start.log` of the container shows the option given, and
 `/var/log/uml-console.log` the mode the UML took ("Checking that seccomp
-filters can be installed...OK" for seccomp).
+filters can be installed...OK" for seccomp). See [Measurements](#measurements)
+for what each mode costs.
 
 ## The kernel
 
@@ -151,3 +152,49 @@ host, from the UML and from a container.
   kept open or mapped in the UML while the host changes it was not tested.
 - `kathara exec` never runs a shell, for any device: pipes and redirections
   need `bash -c '...'`.
+- UML is fast under KVM and slow under emulation (TCG): see below.
+
+## Measurements
+
+2026-11-21, host with 64 cores, Debian 13 test VM with 4 vCPUs and 6 to
+8 GB under KVM. Single runs unless said otherwise.
+
+Test VM, UML 6.18 from kernel.org with base.fragment:
+
+| Step | Time |
+|---|---|
+| `uml/kernel/build.sh --fetch 6.18` (download included) | 1 min 44 s |
+| `kathara lstart` of the router lab | 4.1 to 7.7 s |
+| `kathara lclean` | 4.4 to 4.5 s |
+
+[tests/bench-uml.sh](tests/bench-uml.sh) in the test VM (KVM), UML 6.18
+with base.fragment, three runs each (lowest and highest):
+
+| Test | Container | UML, ptrace | UML, seccomp |
+|---|---|---|---|
+| 200000 syscalls (`dd bs=1`, 100000 bytes) | 0.10 to 0.12 s | 13.49 to 13.59 s | 12.21 to 12.65 s |
+| 300 fork + exec of `/bin/true` | 0.93 to 0.96 s | 13.38 to 13.75 s | 8.52 to 9.17 s |
+| 200 MB through a `dd` buffer (page faults) | 0.16 to 0.49 s | 0.50 to 0.62 s | 0.42 to 0.46 s |
+| computation only (awk loop) | 0.08 to 0.12 s | 0.24 to 0.26 s | 0.19 to 0.20 s |
+
+A syscall in UML costs 60 to 70 microseconds against about 0.6 in a
+container.
+The seccomp mode cuts fork + exec by about a third and a syscall by less
+than a tenth: it is why UML devices boot with `seccomp=auto`.
+
+Micro-tests run in a guest under QEMU TCG (no KVM), first in the guest
+and then inside UML in the same guest:
+
+| Test | Guest | UML (ptrace) | Ratio |
+|---|---|---|---|
+| 200000 syscalls (`dd bs=1`, 100000 bytes) | 0.18 s | 26.3 s | 145 |
+| 300 fork + exec of `/bin/true` | 1.10 s | 23.6 s | 21 |
+| page faults: python zero-fills 200 MB | 0.73 s | 35.7 s | 49 |
+| computation only (awk loop) | 1.87 s | 2.17 s | 1.16 |
+
+Computation costs about the same; every syscall and page fault of a
+process in UML goes through the UML kernel and costs much more. Under TCG
+the seccomp mode of UML, meant to cut that cost, does not start:
+`failed to fetch registers: -22` (from `get_stub_state()`, when
+`get_fpstate()` returns NULL in `arch/x86/um/os-Linux/mcontext.c`), so
+only the ptrace mode is left. The cause under TCG was not found.
