@@ -1,0 +1,8 @@
+# Build container for the UML kernel. Debian 12 links the kernel against
+# glibc 2.36 symbols at most (GLIBC_2.34 measured), so it runs on bookworm
+# based device images such as kathara/base and on anything newer. A UML
+# linked on a newer glibc fails there: "GLIBC_2.38 not found".
+FROM docker.io/library/debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	gcc make flex bison bc libc6-dev libelf-dev dwarves python3 \
+	curl ca-certificates xz-utils git && rm -rf /var/lib/apt/lists/*

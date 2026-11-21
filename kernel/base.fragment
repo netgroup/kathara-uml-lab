@@ -1,0 +1,20 @@
+# Options every UML kernel for a Kathara device needs, on top of
+# `make ARCH=um defconfig`. build.sh fails if one of them does not stick.
+
+# The device rootfs is the container's own / through hostfs.
+CONFIG_HOSTFS=y
+CONFIG_DEVTMPFS=y
+CONFIG_TMPFS=y
+
+# One vector raw interface per collision domain, plus the management one.
+CONFIG_UML_NET_VECTOR=y
+CONFIG_INET=y
+CONFIG_IPV6=y
+CONFIG_PACKET=y
+CONFIG_UNIX=y
+
+# kathara connect: ssh -t needs ptys.
+CONFIG_UNIX98_PTYS=y
+
+# The kernel is one file, mounted in the container.
+CONFIG_MODULES=n
