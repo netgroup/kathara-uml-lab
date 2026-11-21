@@ -1,0 +1,2 @@
+# Build outputs: kernels, dropbear, VM disks, podman storage, logs
+/out/
