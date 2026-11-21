@@ -32,8 +32,8 @@ r[image]="kathara/base"
 r[kernel]="/path/to/linux"
 ```
 
-`kernel` is a UML kernel binary. A relative path is relative to the
-directory `kathara` runs in, as for `volume`. `image` must have the
+`kernel` is a UML kernel binary. A relative path is relative to the lab
+directory, as the other files of the lab. `image` must have the
 OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
 
 [examples/router](examples/router) is a complete lab: `a` and `b` are
