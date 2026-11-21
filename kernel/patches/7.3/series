@@ -1,0 +1,2 @@
+# Applied in this order by uml/kernel/build.sh --fetch 7.3.x
+0001-bpf-Build-bpf_trace_printk-without-BPF_EVENTS.patch

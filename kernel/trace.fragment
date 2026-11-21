@@ -1,0 +1,7 @@
+# bpf_printk on UML devices. UML has no PERF_EVENTS, so no BPF_EVENTS, and
+# without the patch in patches/ bpf_trace_printk is not built at all.
+# FTRACE_SYSCALLS brings EVENT_TRACING (through TRACING) on UML, and with
+# it the tracepoint that bpf_printk writes to (trace_pipe).
+CONFIG_BPF_SYSCALL=y
+CONFIG_FTRACE_SYSCALLS=y
+CONFIG_BPF_TRACE_PRINTK=y

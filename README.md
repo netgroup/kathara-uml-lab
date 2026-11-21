@@ -89,6 +89,30 @@ r[env]="KATHARA_UML_SECCOMP=off"
 filters can be installed...OK" for seccomp). See [Measurements](#measurements)
 for what each mode costs.
 
+## eBPF and bpf_printk
+
+UML has no `PERF_EVENTS`, so no `BPF_EVENTS`. Without them a kernel does
+not build `bpf_trace_printk()`, and the verifier refuses every program
+that calls `bpf_printk()`:
+
+```
+program of this type cannot use helper bpf_trace_printk#6
+```
+
+[kernel/patches/7.3](kernel/patches/7.3) carries a patch that builds the
+helper with `BPF_SYSCALL` and `EVENT_TRACING` instead, and
+[trace.fragment](kernel/trace.fragment) turns them on:
+
+```
+uml/kernel/build.sh --fetch 7.3.5 --fragment uml/kernel/trace.fragment
+```
+
+In a device on that kernel the lines of `bpf_printk()` are in the trace
+buffer of the UML kernel: mount tracefs on `/sys/kernel/tracing` and read
+`trace`. [image/printk-test](image/printk-test) is a device
+image with bpftool, clang and a socket filter that calls `bpf_printk()`,
+used by the tests below.
+
 ## The kernel
 
 [kernel/build.sh](kernel/build.sh) builds it in a podman container,
@@ -146,6 +170,19 @@ uml/vm/vm.sh stop
 codes, startup in the UML, ping and first hop, `connect`, `lclean`).
 [tests/check-shared.sh](tests/check-shared.sh) checks `/shared` from the
 host, from the UML and from a container.
+[tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
+container and checks that `bpf_printk()` works (`printk`) or is refused
+because of the helper (`refused`).
+[tests/check-printk-lab.sh](tests/check-printk-lab.sh) checks it from
+inside a UML device of a lab, through `kathara exec`. Both take the
+kernel as argument:
+
+```
+uml/kernel/build.sh --fetch 7.3.5 --fragment uml/kernel/trace.fragment --out uml/out/printk
+uml/vm/vm.sh install
+uml/vm/vm.sh ssh 'cat > /root/linux-printk && chmod 755 /root/linux-printk' < uml/out/printk/linux
+uml/vm/vm.sh ssh bash /root/kathara/uml/tests/check-printk-lab.sh /root/linux-printk
+```
 
 ## Things to know
 
