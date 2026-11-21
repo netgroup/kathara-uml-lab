@@ -4,11 +4,11 @@
 # With a kernel built with patches/ and trace.fragment the line must be
 # there; without the patch (BPF_SYSCALL and tracing still on) the verifier
 # refuses the program because of the helper. Run it where
-# Docker is, for example in the test VM: `uml/vm/vm.sh ssh bash ...`.
+# Docker is, for example in the test VM: `vm/vm.sh ssh bash ...`.
 #
 #   check-printk.sh <UML kernel> [expect: printk|refused]   (default printk)
 #
-# The test image (uml/image/printk-test) adds bpftool and clang to the
+# The test image (image/printk-test) adds bpftool and clang to the
 # device image and builds prog.c in it.
 KERNEL=$(cd "$(dirname "$1")" 2>/dev/null && pwd)/$(basename "$1")
 EXPECT=${2:-printk}
@@ -19,7 +19,7 @@ docker build -q -t $IMAGE "$(dirname "$0")/../image/printk-test" >/dev/null ||
 	{ echo "FAIL test image"; exit 1; }
 
 # The UML runs the test as its init, from a file it sees through hostfs;
-# its console goes to a file and its stdin stays open (see uml/README.md).
+# its console goes to a file and its stdin stays open (see README.md).
 out=$(docker run --rm -v "$KERNEL:/kathara-uml-kernel:ro" --entrypoint bash $IMAGE -c '
 	mkdir -p /tmp/uml && mkfifo /tmp/uml/stdin
 	cat > /tmp/uml/init.sh <<EOS

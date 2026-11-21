@@ -2,12 +2,12 @@
 # Test VM for UML devices: a Debian 13 VM under KVM, with QEMU in a podman
 # container. Docker, this Kathara tree and the device image are installed
 # INSIDE the VM, so the tests touch neither the host's Docker nor its
-# network. Everything lives in the work dir: UML_LAB_WORK, default uml/out.
+# network. Everything lives in the work dir: UML_LAB_WORK, default out.
 #
 #   vm.sh start          create (first time) and boot the VM, wait for ssh
-#   vm.sh install        copy this tree (and uml/out/kernel/linux) into the
+#   vm.sh install        copy this tree (and out/kernel/linux) into the
 #                        VM, install Docker, Kathara and the device image
-#   vm.sh test           run uml/tests/check-router.sh and check-shared.sh
+#   vm.sh test           run tests/check-router.sh and check-shared.sh
 #   vm.sh ssh [cmd...]   a command (or a shell) in the VM
 #   vm.sh stop           stop the VM (its disk stays in the work dir)
 #
@@ -68,7 +68,7 @@ do_install()
 	running || die "VM not running: vm.sh start"
 	local tar=$V/tmp/tree.tar
 	# The tracked and the new files of the tree, not what .gitignore hides,
-	# plus the kernel built by uml/kernel/build.sh if there is one.
+	# plus the kernel built by kernel/build.sh if there is one.
 	(cd "$REPO" && git ls-files -co --exclude-standard -z | tar --null -T - -cf "$tar") ||
 		die "cannot pack the tree"
 	[ -f "$WORK/kernel/linux" ] &&

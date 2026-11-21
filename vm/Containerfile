@@ -1,5 +1,5 @@
 # QEMU/KVM, qemu-img, ssh and python3 (cloud-init seed over HTTP) to run
-# and drive the test VM of uml/vm/vm.sh.
+# and drive the test VM of vm/vm.sh.
 FROM docker.io/library/debian:trixie-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	qemu-system-x86 qemu-utils openssh-client python3 curl ca-certificates && \

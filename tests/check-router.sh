@@ -1,7 +1,7 @@
 #!/bin/bash
-# Test of a UML device with the example lab uml/examples/router (a and b
+# Test of a UML device with the example lab examples/router (a and b
 # are containers, r runs on its own UML kernel). Run it where Kathara and
-# the lab are, for example in the test VM: `uml/vm/vm.sh test`.
+# the lab are, for example in the test VM: `vm/vm.sh test`.
 #
 #   check-router.sh [lab dir]     (default: ../examples/router)
 #

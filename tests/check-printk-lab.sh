@@ -1,7 +1,7 @@
 #!/bin/bash
 # bpf_printk from inside a Kathara UML device: a lab with one device, r,
 # on a UML kernel built with patches/ and trace.fragment and on the image
-# uml/image/printk-test. kathara exec loads the socket filter of prog.c in
+# image/printk-test. kathara exec loads the socket filter of prog.c in
 # r, runs it once and reads its line from the trace buffer of r's kernel.
 #
 #   check-printk-lab.sh <UML kernel>

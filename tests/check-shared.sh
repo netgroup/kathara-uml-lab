@@ -1,12 +1,12 @@
 #!/bin/bash
 # The lab's shared folder (/shared) seen by a container device (a) and by
 # a UML device (r, through hostfs), with writes from the host side and
-# from inside the UML. Uses uml/examples/router.
+# from inside the UML. Uses examples/router.
 #
 #   check-shared.sh [lab dir]     (default: ../examples/router)
 #
 # Each read is a new process (cat, ls): a file kept open or mapped in the
-# UML while the host changes it is not tested (see uml/README.md).
+# UML while the host changes it is not tested (see README.md).
 LAB=${1:-$(dirname "$0")/../examples/router}
 cd "$LAB" || exit 1
 LAB=$(pwd)

@@ -18,11 +18,11 @@
 #            in the given order. base.fragment (next to this script) is
 #            always the first one. Every option of every fragment must stick,
 #            or the build fails.
-# --out      output directory, default uml/out/kernel. Holds linux,
+# --out      output directory, default out/kernel. Holds linux,
 #            linux.config, BUILD-INFO, make.log and, with --fetch, the
 #            tarball; the objects and the unpacked sources are removed.
 #
-# UML_LAB_WORK sets where podman keeps its storage (default uml/out).
+# UML_LAB_WORK sets where podman keeps its storage (default out).
 set -o pipefail
 
 die() { echo "build.sh: $*" >&2; exit 1; }

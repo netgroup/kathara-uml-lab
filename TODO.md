@@ -9,7 +9,7 @@
       `dbclient` for ushell, `dropbearkey`), copied into the container
       with the helpers. A prototype, dropbear 2026.94 built with musl,
       static, password login off, GPG signature checked, is in
-      `uml/out/dropbear` (not in git): integrate it in UmlHelpers.py and
+      `out/dropbear` (not in git): integrate it in UmlHelpers.py and
       build.sh, then run the lab tests with plain `kathara/base`.
 - [ ] **Kernel modules.** UML supports them (`CONFIG_MODULES=y` in
       `arch/um/configs/x86_64_defconfig`); base.fragment turns them off.
@@ -19,7 +19,7 @@
          sets it.
       2. With `CONFIG_MODULES=y`, build and install the modules
          (`make modules`, `modules_install` into
-         `uml/out/kernel/modules`).
+         `out/kernel/modules`).
       3. Mount them with the existing volume option,
          `r[volume]="<out>/modules/lib/modules/<release>|/lib/modules/<release>|ro"`,
          and test `modprobe` of a network module in a UML device of a

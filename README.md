@@ -114,7 +114,7 @@ helper with `BPF_SYSCALL` and `EVENT_TRACING` instead, and
 [trace.fragment](kernel/trace.fragment) turns them on:
 
 ```
-uml/kernel/build.sh --fetch 7.3.5 --fragment uml/kernel/trace.fragment
+kernel/build.sh --fetch 7.3.5 --fragment kernel/trace.fragment
 ```
 
 In a device on that kernel the lines of `bpf_printk()` are in the trace
@@ -129,14 +129,14 @@ used by the tests below.
 nothing is installed on the host:
 
 ```
-uml/kernel/build.sh --fetch 7.3.5                       # kernel.org release
-uml/kernel/build.sh --src ~/linux --fragment my.fragment
+kernel/build.sh --fetch 7.3.5                       # kernel.org release
+kernel/build.sh --src ~/linux --fragment my.fragment
 ```
 
 The config is `make ARCH=um defconfig`, then
 [base.fragment](kernel/base.fragment) (hostfs, vector network, devtmpfs,
 tmpfs, IPv4/IPv6, ptys), then the given fragments. The build fails if an
-option of a fragment does not stick. The result is `uml/out/kernel/linux`,
+option of a fragment does not stick. The result is `out/kernel/linux`,
 stripped, with `linux.config` and `BUILD-INFO`.
 
 The builder is Debian 12 on purpose. UML is a dynamic binary: linked on a
@@ -158,7 +158,7 @@ it is. With `--src` no patch is applied: the tree is the caller's.
 [image/Dockerfile](image/Dockerfile) adds it.
 
 ```
-docker build -t kathara-uml/base-ssh uml/image
+docker build -t kathara-uml/base-ssh image
 ```
 
 ## Test VM
@@ -168,11 +168,11 @@ podman container), with Docker, this tree and the image installed inside
 the VM, so the host's Docker and network are not touched:
 
 ```
-uml/kernel/build.sh --fetch 7.3.5
-uml/vm/vm.sh start
-uml/vm/vm.sh install
-uml/vm/vm.sh test
-uml/vm/vm.sh stop
+kernel/build.sh --fetch 7.3.5
+vm/vm.sh start
+vm/vm.sh install
+vm/vm.sh test
+vm/vm.sh stop
 ```
 
 [tests/check-router.sh](tests/check-router.sh) checks the router lab
@@ -188,10 +188,10 @@ inside a UML device of a lab, through `kathara exec`. Both take the
 kernel as argument:
 
 ```
-uml/kernel/build.sh --fetch 7.3.5 --fragment uml/kernel/trace.fragment --out uml/out/printk
-uml/vm/vm.sh install
-uml/vm/vm.sh ssh 'cat > /root/linux-printk && chmod 755 /root/linux-printk' < uml/out/printk/linux
-uml/vm/vm.sh ssh bash /root/kathara/uml/tests/check-printk-lab.sh /root/linux-printk
+kernel/build.sh --fetch 7.3.5 --fragment kernel/trace.fragment --out out/printk
+vm/vm.sh install
+vm/vm.sh ssh 'cat > /root/linux-printk && chmod 755 /root/linux-printk' < out/printk/linux
+vm/vm.sh ssh bash /root/kathara/uml/tests/check-printk-lab.sh /root/linux-printk
 ```
 
 ## Things to know
@@ -216,7 +216,7 @@ Test VM, UML from kernel.org with base.fragment:
 
 | Step | UML 6.18 | UML 7.3.5 |
 |---|---|---|
-| `uml/kernel/build.sh --fetch` | 1 min 44 s, download included | 68 s, tarball already there |
+| `kernel/build.sh --fetch` | 1 min 44 s, download included | 68 s, tarball already there |
 | `kathara lstart` of the router lab | 4.1 to 7.7 s | 5.2 s |
 | `kathara lclean` | 4.4 to 4.5 s | 3.6 s |
 
