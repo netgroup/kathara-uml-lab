@@ -95,7 +95,7 @@ for what each mode costs.
 nothing is installed on the host:
 
 ```
-uml/kernel/build.sh --fetch 6.18                        # kernel.org release
+uml/kernel/build.sh --fetch 7.3.5                       # kernel.org release
 uml/kernel/build.sh --src ~/linux --fragment my.fragment
 ```
 
@@ -128,7 +128,7 @@ podman container), with Docker, this tree and the image installed inside
 the VM, so the host's Docker and network are not touched:
 
 ```
-uml/kernel/build.sh --fetch 6.18
+uml/kernel/build.sh --fetch 7.3.5
 uml/vm/vm.sh start
 uml/vm/vm.sh install
 uml/vm/vm.sh test
@@ -159,13 +159,13 @@ host, from the UML and from a container.
 2026-11-21, host with 64 cores, Debian 13 test VM with 4 vCPUs and 6 to
 8 GB under KVM. Single runs unless said otherwise.
 
-Test VM, UML 6.18 from kernel.org with base.fragment:
+Test VM, UML from kernel.org with base.fragment:
 
-| Step | Time |
-|---|---|
-| `uml/kernel/build.sh --fetch 6.18` (download included) | 1 min 44 s |
-| `kathara lstart` of the router lab | 4.1 to 7.7 s |
-| `kathara lclean` | 4.4 to 4.5 s |
+| Step | UML 6.18 | UML 7.3.5 |
+|---|---|---|
+| `uml/kernel/build.sh --fetch` | 1 min 44 s, download included | 68 s, tarball already there |
+| `kathara lstart` of the router lab | 4.1 to 7.7 s | 5.2 s |
+| `kathara lclean` | 4.4 to 4.5 s | 3.6 s |
 
 [tests/bench-uml.sh](tests/bench-uml.sh) in the test VM (KVM), UML 6.18
 with base.fragment, three runs each (lowest and highest):
