@@ -120,6 +120,26 @@ A static UML is not an option: `STATIC_LINK` depends on
 docker build -t kathara-uml/base-ssh uml/image
 ```
 
+## Test VM
+
+[vm/vm.sh](vm/vm.sh) runs the tests in a Debian VM under KVM (QEMU in a
+podman container), with Docker, this tree and the image installed inside
+the VM, so the host's Docker and network are not touched:
+
+```
+uml/kernel/build.sh --fetch 6.18
+uml/vm/vm.sh start
+uml/vm/vm.sh install
+uml/vm/vm.sh test
+uml/vm/vm.sh stop
+```
+
+[tests/check-router.sh](tests/check-router.sh) checks the router lab
+(UML label, no privileged mode, `exec` in the UML and in a container, exit
+codes, startup in the UML, ping and first hop, `connect`, `lclean`).
+[tests/check-shared.sh](tests/check-shared.sh) checks `/shared` from the
+host, from the UML and from a container.
+
 ## Things to know
 
 - The UML console goes to `/var/log/uml-console.log` of the container,
