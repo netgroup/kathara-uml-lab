@@ -15,7 +15,8 @@
 #            always the first one. Every option of every fragment must stick,
 #            or the build fails.
 # --out      output directory, default uml/out/kernel. Holds linux,
-#            linux.config and BUILD-INFO.
+#            linux.config, BUILD-INFO, make.log and, with --fetch, the
+#            tarball; the objects and the unpacked sources are removed.
 #
 # UML_LAB_WORK sets where podman keeps its storage (default uml/out).
 set -o pipefail
@@ -68,14 +69,18 @@ S=/src
 if [ -n "$FETCH" ]; then
 	major=${FETCH%%.*}
 	tarball=linux-$FETCH.tar.xz
+	# Keep only the tarball of this version.
+	find /out -maxdepth 1 -name "linux-*.tar.xz" ! -name $tarball -delete
 	[ -f /out/$tarball ] ||
 		curl -sfL -o /out/$tarball https://cdn.kernel.org/pub/linux/kernel/v$major.x/$tarball ||
 		die "download of $tarball failed"
 	rm -rf /out/src && mkdir -p /out/src && tar -C /out/src -xf /out/$tarball || die "untar failed"
 	S=/out/src/linux-$FETCH
 fi
+# A fresh build directory: objects of another tree or version could look
+# newer than the sources and not be rebuilt.
 O=/out/build
-mkdir -p $O
+rm -rf $O && mkdir -p $O
 make -C $S O=$O ARCH=um defconfig >/dev/null || die "defconfig failed"
 $S/scripts/kconfig/merge_config.sh -m -O $O $O/.config $(ls /frag/* | sort -n -t/ -k3) >/dev/null ||
 	die "merge_config failed"
@@ -107,5 +112,9 @@ glibc=$(objdump -T /out/linux | grep -o "GLIBC_[0-9.]*" | sort -uV | tail -1)
 	sha256sum /out/linux | sed "s|/out/||"
 } > /out/BUILD-INFO
 cat /out/BUILD-INFO
+# The result is linux, linux.config and BUILD-INFO: drop the objects, and
+# the sources unpacked from the tarball.
+rm -rf $O
+[ -n "$FETCH" ] && rm -rf /out/src
 ' || die "build failed, see $OUT/make.log"
 echo "kernel: $OUT/linux"
