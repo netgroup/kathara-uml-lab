@@ -24,7 +24,11 @@ r[kernel]="/path/to/linux"
 
 `kernel` is a UML kernel binary. A relative path is relative to the
 directory `kathara` runs in, as for `volume`. `image` must have an ssh
-client.
+client (see [Image](#image)).
+
+[examples/router](examples/router) is a complete lab: `a` and `b` are
+containers, `r` is a router on a UML kernel, and its `r.startup` is a
+normal startup file that configures `eth0` and `eth1`.
 
 ## How it works
 
@@ -106,10 +110,24 @@ newer glibc it fails on bookworm based images such as `kathara/base`
 A static UML is not an option: `STATIC_LINK` depends on
 `!MAY_HAVE_RUNTIME_DEPS`, which the vector driver selects.
 
+## Image
+
+`ushell` needs an ssh client in the image, and the UML needs `sshd`,
+`ip` and `bash`. `kathara/base` has `sshd` but no client:
+[image/Dockerfile](image/Dockerfile) adds it.
+
+```
+docker build -t kathara-uml/base-ssh uml/image
+```
+
 ## Things to know
 
 - The UML console goes to `/var/log/uml-console.log` of the container,
   and its stdin is kept open. UML stops early in the boot, before mounting
   its root, when its stdout is a pipe or its stdin reaches end of file.
+- hostfs does not see changes made outside the UML to files it holds in
+  its cache (see the hostfs section of the UML howto). The shared folder
+  tests read each file with a new process and saw every change; a file
+  kept open or mapped in the UML while the host changes it was not tested.
 - `kathara exec` never runs a shell, for any device: pipes and redirections
   need `bash -c '...'`.
