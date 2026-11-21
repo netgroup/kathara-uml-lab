@@ -36,7 +36,7 @@
 
 ## Patches
 
-- [ ] `kernel/patches/7.3` carries "bpf: Build bpf_trace_printk()
+- [ ] `uml-kernel/patches/7.3` carries "bpf: Build bpf_trace_printk()
       without BPF_EVENTS", not yet submitted to the kernel.
       If it goes upstream, replace it with the upstream commit.
 

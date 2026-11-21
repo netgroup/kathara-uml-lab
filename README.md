@@ -109,12 +109,12 @@ that calls `bpf_printk()`:
 program of this type cannot use helper bpf_trace_printk#6
 ```
 
-[kernel/patches/7.3](kernel/patches/7.3) carries a patch that builds the
+[uml-kernel/patches/7.3](uml-kernel/patches/7.3) carries a patch that builds the
 helper with `BPF_SYSCALL` and `EVENT_TRACING` instead, and
-[trace.fragment](kernel/trace.fragment) turns them on:
+[trace.fragment](uml-kernel/trace.fragment) turns them on:
 
 ```
-kernel/build.sh --fetch 7.3.5 --fragment kernel/trace.fragment
+uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment
 ```
 
 In a device on that kernel the lines of `bpf_printk()` are in the trace
@@ -125,16 +125,16 @@ used by the tests below.
 
 ## The kernel
 
-[kernel/build.sh](kernel/build.sh) builds it in a podman container,
+[uml-kernel/build.sh](uml-kernel/build.sh) builds it in a podman container,
 nothing is installed on the host:
 
 ```
-kernel/build.sh --fetch 7.3.5                       # kernel.org release
-kernel/build.sh --src ~/linux --fragment my.fragment
+uml-kernel/build.sh --fetch 7.3.5                       # kernel.org release
+uml-kernel/build.sh --src ~/linux --fragment my.fragment
 ```
 
 The config is `make ARCH=um defconfig`, then
-[base.fragment](kernel/base.fragment) (hostfs, vector network, devtmpfs,
+[base.fragment](uml-kernel/base.fragment) (hostfs, vector network, devtmpfs,
 tmpfs, IPv4/IPv6, ptys), then the given fragments. The build fails if an
 option of a fragment does not stick. The result is `out/kernel/linux`,
 stripped, with `linux.config` and `BUILD-INFO`.
@@ -146,7 +146,7 @@ A static UML is not an option: `STATIC_LINK` depends on
 `!MAY_HAVE_RUNTIME_DEPS`, which the vector driver selects.
 
 With `--fetch X.Y.Z`, build.sh applies the patches listed in
-`kernel/patches/X.Y/series`, in order, if that directory exists; a patch
+`uml-kernel/patches/X.Y/series`, in order, if that directory exists; a patch
 that does not apply stops the build. `--no-patches` builds the release as
 it is. With `--src` no patch is applied: the tree is the caller's.
 `BUILD-INFO` lists the patches applied.
@@ -169,7 +169,7 @@ and the image installed inside the VM, so the host's Docker and network
 are not touched:
 
 ```
-kernel/build.sh --fetch 7.3.5
+uml-kernel/build.sh --fetch 7.3.5
 vm/vm.sh start
 vm/vm.sh install
 vm/vm.sh test
@@ -189,7 +189,7 @@ inside a UML device of a lab, through `kathara exec`. Both take the
 kernel as argument:
 
 ```
-kernel/build.sh --fetch 7.3.5 --fragment kernel/trace.fragment --out out/printk
+uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment --out out/printk
 vm/vm.sh install
 vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/printk &&
 	cat > /opt/kathara-uml/out/printk/linux && chmod 755 /opt/kathara-uml/out/printk/linux' < out/printk/linux
@@ -218,7 +218,7 @@ Test VM, UML from kernel.org with base.fragment:
 
 | Step | UML 6.18 | UML 7.3.5 |
 |---|---|---|
-| `kernel/build.sh --fetch` | 1 min 44 s, download included | 68 s, tarball already there |
+| `uml-kernel/build.sh --fetch` | 1 min 44 s, download included | 68 s, tarball already there |
 | `kathara lstart` of the router lab | 4.1 to 7.7 s | 5.2 s |
 | `kathara lclean` | 4.4 to 4.5 s | 3.6 s |
 

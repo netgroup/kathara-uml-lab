@@ -69,7 +69,7 @@ do_install()
 	local tar=$V/tmp/tree.tar
 	# The tracked and the new files of the tree and of the kathara
 	# submodule, not what .gitignore hides, plus the kernel built by
-	# kernel/build.sh if there is one.
+	# uml-kernel/build.sh if there is one.
 	(cd "$REPO" && git ls-files -co --exclude-standard -z -- ':!kathara' | tar --null -T - -cf "$tar") ||
 		die "cannot pack the tree"
 	(cd "$REPO/kathara" && git ls-files -co --exclude-standard -z |
@@ -89,7 +89,7 @@ do_install()
 		chmod 755 /usr/local/bin/kathara
 		docker build -q -t kathara-uml/base-ssh /opt/kathara-uml/image >/dev/null
 		echo "installed: $(kathara --version | tail -1), Docker $(docker version --format "{{.Server.Version}}")"
-		ls -l /opt/kathara-uml/out/kernel/linux 2>/dev/null || echo "no UML kernel: run kernel/build.sh first"' < "$tar"
+		ls -l /opt/kathara-uml/out/kernel/linux 2>/dev/null || echo "no UML kernel: run uml-kernel/build.sh first"' < "$tar"
 }
 
 do_test()
