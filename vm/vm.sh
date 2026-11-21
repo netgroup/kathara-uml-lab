@@ -1,8 +1,9 @@
 #!/bin/bash
 # Test VM for UML devices: a Debian 13 VM under KVM, with QEMU in a podman
-# container. Docker, this Kathara tree and the device image are installed
-# INSIDE the VM, so the tests touch neither the host's Docker nor its
-# network. Everything lives in the work dir: UML_LAB_WORK, default out.
+# container. Docker, this tree with the Kathara of its submodule and the
+# device image are installed INSIDE the VM, so the tests touch neither the
+# host's Docker nor its network. Everything lives in the work dir:
+# UML_LAB_WORK, default out.
 #
 #   vm.sh start          create (first time) and boot the VM, wait for ssh
 #   vm.sh install        copy this tree (and out/kernel/linux) into the
@@ -19,9 +20,8 @@ set -o pipefail
 die() { echo "vm.sh: $*" >&2; exit 1; }
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-UML_DIR=$(dirname "$HERE")
-REPO=$(dirname "$UML_DIR")
-WORK=${UML_LAB_WORK:-$UML_DIR/out}
+REPO=$(dirname "$HERE")
+WORK=${UML_LAB_WORK:-$REPO/out}
 V=$WORK/vm
 NAME=kathara-uml-vm
 IMAGE=localhost/kathara-uml-vm
@@ -67,31 +67,35 @@ do_install()
 {
 	running || die "VM not running: vm.sh start"
 	local tar=$V/tmp/tree.tar
-	# The tracked and the new files of the tree, not what .gitignore hides,
-	# plus the kernel built by kernel/build.sh if there is one.
-	(cd "$REPO" && git ls-files -co --exclude-standard -z | tar --null -T - -cf "$tar") ||
+	# The tracked and the new files of the tree and of the kathara
+	# submodule, not what .gitignore hides, plus the kernel built by
+	# kernel/build.sh if there is one.
+	(cd "$REPO" && git ls-files -co --exclude-standard -z -- ':!kathara' | tar --null -T - -cf "$tar") ||
 		die "cannot pack the tree"
+	(cd "$REPO/kathara" && git ls-files -co --exclude-standard -z |
+		tar --null -T - -rf "$tar" --transform 's|^|kathara/|') ||
+		die "cannot pack kathara: git submodule update --init"
 	[ -f "$WORK/kernel/linux" ] &&
-		tar -rf "$tar" -C "$WORK/kernel" --transform 's|^|uml/out/kernel/|' linux
+		tar -rf "$tar" -C "$WORK/kernel" --transform 's|^|out/kernel/|' linux
 	vssh 'set -e
 		export DEBIAN_FRONTEND=noninteractive
 		if ! command -v docker >/dev/null || ! [ -x /usr/bin/python3 ] || ! python3 -c "import venv" 2>/dev/null; then
 			apt-get update -q >/dev/null && apt-get install -y -q docker.io python3-venv >/tmp/apt.log
 		fi
-		rm -rf /root/kathara && mkdir /root/kathara && tar -C /root/kathara -xf -
+		rm -rf /opt/kathara-uml && mkdir /opt/kathara-uml && tar -C /opt/kathara-uml -xf -
 		[ -x /opt/kathara/bin/pip ] || python3 -m venv /opt/kathara
-		/opt/kathara/bin/pip install -q /root/kathara >/tmp/pip.log
-		printf "#!/bin/sh\nexec /opt/kathara/bin/python /root/kathara/src/kathara.py \"\$@\"\n" > /usr/local/bin/kathara
+		/opt/kathara/bin/pip install -q /opt/kathara-uml/kathara >/tmp/pip.log
+		printf "#!/bin/sh\nexec /opt/kathara/bin/python /opt/kathara-uml/kathara/src/kathara.py \"\$@\"\n" > /usr/local/bin/kathara
 		chmod 755 /usr/local/bin/kathara
-		docker build -q -t kathara-uml/base-ssh /root/kathara/uml/image >/dev/null
+		docker build -q -t kathara-uml/base-ssh /opt/kathara-uml/image >/dev/null
 		echo "installed: $(kathara --version | tail -1), Docker $(docker version --format "{{.Server.Version}}")"
-		ls -l /root/kathara/uml/out/kernel/linux 2>/dev/null || echo "no UML kernel: run uml/kernel/build.sh first"' < "$tar"
+		ls -l /opt/kathara-uml/out/kernel/linux 2>/dev/null || echo "no UML kernel: run kernel/build.sh first"' < "$tar"
 }
 
 do_test()
 {
 	running || die "VM not running: vm.sh start"
-	vssh 'cd /root/kathara/uml/tests && bash check-router.sh; a=$?; bash check-shared.sh; b=$?; exit $((a + b))'
+	vssh 'cd /opt/kathara-uml/tests && bash check-router.sh; a=$?; bash check-shared.sh; b=$?; exit $((a + b))'
 }
 
 case "$1" in

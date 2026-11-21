@@ -164,8 +164,9 @@ docker build -t kathara-uml/base-ssh image
 ## Test VM
 
 [vm/vm.sh](vm/vm.sh) runs the tests in a Debian VM under KVM (QEMU in a
-podman container), with Docker, this tree and the image installed inside
-the VM, so the host's Docker and network are not touched:
+podman container), with Docker, this tree, the Kathara of its submodule
+and the image installed inside the VM, so the host's Docker and network
+are not touched:
 
 ```
 kernel/build.sh --fetch 7.3.5
@@ -190,8 +191,9 @@ kernel as argument:
 ```
 kernel/build.sh --fetch 7.3.5 --fragment kernel/trace.fragment --out out/printk
 vm/vm.sh install
-vm/vm.sh ssh 'cat > /root/linux-printk && chmod 755 /root/linux-printk' < out/printk/linux
-vm/vm.sh ssh bash /root/kathara/uml/tests/check-printk-lab.sh /root/linux-printk
+vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/printk &&
+	cat > /opt/kathara-uml/out/printk/linux && chmod 755 /opt/kathara-uml/out/printk/linux' < out/printk/linux
+vm/vm.sh ssh bash /opt/kathara-uml/tests/check-printk-lab.sh /opt/kathara-uml/out/printk/linux
 ```
 
 ## Things to know
