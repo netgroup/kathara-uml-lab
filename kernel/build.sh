@@ -115,6 +115,6 @@ cat /out/BUILD-INFO
 # The result is linux, linux.config and BUILD-INFO: drop the objects, and
 # the sources unpacked from the tarball.
 rm -rf $O
-[ -n "$FETCH" ] && rm -rf /out/src
+if [ -n "$FETCH" ]; then rm -rf /out/src; fi
 ' || die "build failed, see $OUT/make.log"
 echo "kernel: $OUT/linux"
