@@ -2,16 +2,21 @@
 
 How a Kathara device runs on its own User-Mode Linux (UML) kernel: what
 Kathara does, what runs in the container, how packets reach the UML, what
-the UML boot options are for, and how the files and the shell of the
-device get into the UML.
+the UML boot options are for, how the settings of the device reach the
+UML, and how the files and the shell of the device get into it.
+
+The rule behind it: a process in the UML finds what it would find in the
+container of the device. Kathara keeps building the container as for any
+device; the helpers hand its settings to the UML kernel.
 
 Line numbers refer to the Kathara of the `kathara` submodule
-(`src/Kathara/manager/docker/`, at 13222d1, on Kathara's `develop`) and,
+(`src/Kathara/manager/docker/`, at 54c132c, on Kathara's `develop`) and,
 for the kernel, to a tree at v7.4-rc2-492-g533ec433efdc, not to the 7.3.5
 sources the test kernel is built from. The outputs under "Observed" come
-from the router lab in the test VM, on 2026-11-21, with the 7.3.5 kernel
-of `out/kernel`, Kathara 3.8.4 and the helpers as they were before they
-were rewritten on 2026-11-22; the boot options of the UML did not change.
+from the router lab in the test VM: those of the packet sockets and of
+the console from 2026-11-21, with Kathara 3.8.4 and the helpers as they
+were then (the boot options of the UML did not change), the others from
+2026-11-22, with the Kathara of the submodule.
 
 ## The pieces
 
@@ -19,10 +24,12 @@ were rewritten on 2026-11-22; the boot options of the UML did not change.
  lab.conf: r[kernel]="kernel/linux"
      |
      v
- Kathara (kathara/, Docker manager)          helpers (UmlHelpers.py)
+ Kathara (kathara/, Docker manager)          helpers and settings (UmlHelpers.py)
    DockerMachine.create()  ---- copies ---->   /kathara-uml/start   entrypoint of the container
    DockerMachine.start()                       /kathara-uml/init    PID 1 of the UML
    DockerMachine.exec()                        /kathara-uml/ushell  shell of the device
+                                               /kathara-uml/sysctl.conf, environment,
+                                                 shell, ulimit.conf: the settings
      |
      | mounts read-only
      v
@@ -38,22 +45,31 @@ are processes of the container too.
 
 For a device with the `kernel` option, `DockerMachine.create()`:
 
-- resolves the path: relative to the lab directory, through the lab
-  filesystem, with links resolved (`DockerMachine.py:337-339`); the file
-  must exist (`:340-341`);
-- mounts it read-only on `/kathara-uml-kernel` (`:343`) and sets
-  `KATHARA_UML_IFACES` to the number of interfaces (`:344`);
-- sets the label `uml`, the shell label to `/kathara-uml/ushell` and the
-  entrypoint to `/kathara-uml/start` (`:378-381`);
-- copies the three helpers into `/kathara-uml` (`:416-417`).
+- builds the sysctls of the container as for any device, and keeps a copy
+  for the UML before the interface ones go to the network driver
+  (`DockerMachine.py:300`);
+- resolves the path of the kernel: relative to the lab directory, through
+  the lab filesystem, with links resolved (`:339-341`); the file must
+  exist (`:342-343`);
+- refuses the `entrypoint` and `args` options (`:345-350`), see
+  [Settings of a device](#settings-of-a-device);
+- mounts the kernel read-only on `/kathara-uml-kernel` (`:352`) and sets
+  `KATHARA_UML_IFACES` to the number of interfaces and, for a bridged
+  device, `KATHARA_UML_BRIDGED_IFACE` to the number of the bridged one
+  (`:353-355`);
+- keeps the shell of the device, then sets the label `uml`, the shell
+  label to `/kathara-uml/ushell` and the entrypoint to
+  `/kathara-uml/start` (`:391-394`);
+- copies the three helpers and the settings files into `/kathara-uml`
+  (`:430-433`).
 
 `DockerMachine.start()` starts the container, then connects the
-interfaces after the first one, which Kathara does only after the start
-(`:555-563`), then touches `/run/kathara-uml.ready` (`:571-573`), then runs
-the startup commands as `<shell> -c <commands>` (`:594`). `connect` runs
-the shell label (`:710-711`), and `exec` of a UML device runs the
-command as `<shell> -c <command>` (`:842-843`). With the shell label set
-to `ushell`, all three go into the UML.
+interfaces after the first one, which Kathara does only after the start,
+and the bridged one (`:571-584`), then touches `/run/kathara-uml.ready`
+(`:587-589`), then runs the startup commands as `<shell> -c <commands>`
+(`:610`). `connect` runs the shell label (`:726-727`), and `exec` of a
+UML device runs the command as `<shell> -c <command>` (`:858-859`). With
+the shell label set to `ushell`, all three go into the UML.
 
 ## Boot sequence
 
@@ -62,35 +78,43 @@ to `ushell`, all three go into the UML.
  -------                         -----------                        ----------
  create(): mount kernel,
    entrypoint start,
-   copy helpers
- start(): container start  --->  start: ssh key, then waits
-                                 for /run/kathara-uml.ready
- connect eth1.. ethN
- touch kathara-uml.ready   --->  start: veth um0/um1, ethK up,
+   copy helpers and
+   the settings files
+ start(): container start  --->  start: ssh key, unmount
+                                 /etc/hosts and resolv.conf,
+                                 wait for the ready file
+ connect eth1.. ethN,
+   the bridged interface
+ touch kathara-uml.ready   --->  start: veth um0/um1, MACs,
+                                 bridged address, memory,
                                  exec /kathara-uml-kernel ... -->   boot, mount / (hostfs),
                                                                     vecK interfaces,
                                                                     run /kathara-uml/init
-                                                                    init: vecK -> ethK,
+                                                                    init: filesystems,
+                                                                    vecK -> ethK, bridged,
+                                                                    sysctls, ulimits,
                                                                     last -> kmgmt, sshd
  startup: ushell -c CMDS   --->  ushell: waits for the key,
-                                 ssh 169.254.77.2 -------------->   sshd: runs CMDS
-                                 (ssh retries the connect           (r.startup)
-                                 until sshd answers)
+                                 ssh 169.254.77.2 -------------->   sshd: <shell> -c CMDS
+                                 (ssh retries the connect           with the environment
+                                 until sshd answers)                (r.startup)
 ```
 
-`start` makes the key of `ushell` first (`UmlHelpers.py:47-55`), then
-builds the `vecK` boot options from the interfaces of the container, so
-it waits for the ready file, that is until Kathara has attached them all:
-600 checks 0.1 s apart (`:25-32`, `:56`).
+`start` (`UmlHelpers.py:13-165`) makes the key of `ushell` first
+(`:121-129`), unmounts the `/etc/hosts` and `/etc/resolv.conf` that Docker
+mounts in a container (`:39-42`, `:130`), then waits for the ready file,
+that is until Kathara has attached every interface: 600 checks 0.1 s
+apart (`:46-53`, `:131`). It builds the `vecK` boot options from those
+interfaces (`:138-147`).
 
 Kathara runs the startup through `ushell` right after it touches the
-ready file. `ushell` waits for the key (`:159-168`), up to 600 checks 0.1 s
-apart, then runs one ssh (`:149-153`, `:169-173`). While the UML boots,
-ssh retries only the TCP connect, once a second, up to
-`ConnectionAttempts=120` times (`sshconnect.c:461-518` of OpenSSH
-9.2p1), so a startup or an `exec` issued then waits for `sshd`, and a
-command never runs twice. `ConnectTimeout=10` bounds each connect and the
-ssh banner exchange (`kex.c:1275-1282`).
+ready file. `ushell` (`:302-364`) waits for the key (`:324-331`, `:357`),
+up to 600 checks 0.1 s apart, then runs one ssh (`:315-318`,
+`:359-363`). While the UML boots, ssh retries only the TCP connect, once
+a second, up to `ConnectionAttempts=120` times (`sshconnect.c:461-518` of
+OpenSSH 9.2p1), so a startup or an `exec` issued then waits for `sshd`,
+and a command never runs twice. `ConnectTimeout=10` bounds each connect
+and the ssh banner exchange (`kex.c:1275-1282`).
 
 ## Network
 
@@ -118,14 +142,20 @@ ssh banner exchange (`kex.c:1275-1282`).
 
 ### Collision domain interfaces
 
-Kathara attaches the container to its collision domains as for any device:
-`eth0`, `eth1`, ... are veth interfaces of the container. `start` gives
-each one to the UML (`UmlHelpers.py:36-42`, `:62-66`):
+Kathara attaches the container to its collision domains as for any
+device: `eth0`, `eth1`, ... are veth interfaces of the container, and the
+network plugin of Kathara gives each the MAC address of `lab.conf`, if
+there is one. `start` gives each one to the UML (`add_vector`,
+`UmlHelpers.py:75-85`, `take_mac`, `:64-70`, used at `:138-140`):
 
-- it disables IPv6 on it and sets it up; it gives it no address, so the
-  interface of the container is only a wire for the UML;
-- it adds `vecK:transport=raw,ifname=ethK,depth=128,gro=1` to the boot
-  options.
+- the UML interface takes the MAC address of the container interface,
+  and the container interface a random one (`random_mac`, `:56-59`), so
+  that the stack of the container takes the frames for the UML as not
+  its own;
+- it disables IPv6 on the container interface and sets it up; the
+  container interface has no address: it is only a wire for the UML;
+- it adds `vecK:transport=raw,ifname=ethK,depth=128,gro=1,mac=...` to the
+  boot options.
 
 The UML vector driver, with the raw transport, opens two packet sockets
 on that interface (`arch/um/drivers/vector_user.c:521-560`):
@@ -164,49 +194,116 @@ ifindex 71 (`eth0`), 72 (`eth1`) and 2 (`um1`), one with protocol 0003
   `vector_user.c:860-889`). Inference, not checked further: both keep the
   UML from receiving the frames it sent itself.
 - The container's own stack also receives the frames of `eth0`, but the
-  interface has no IPv4 address and IPv6 is off on it. The router test
-  (`tests/check-router.sh`) checks that the container's `eth0` has no
-  address and that the first hop from `a` to `b` is the address of the UML.
+  interface has no IPv4 address, IPv6 is off on it, and the frames for
+  the UML carry a MAC address that is no longer the one of the
+  container. The router test (`tests/check-router.sh`) checks that the
+  container's `eth0` has no address and that the first hop from `a` to
+  `b` is the address of the UML.
+
+### Bridged interface and published ports
+
+With the `bridged` option Docker connects the container to its bridge
+network on one more interface, after the others, with an address, a
+default route and a MAC address of its own, and publishes the ports of
+the `port` option to that address (`DockerMachine.py:266-267`,
+`:583-584`). `start` moves the address and the default route to
+`/var/lib/kathara-uml/bridged.conf` and removes them from the container
+(`take_bridged_config`, `UmlHelpers.py:90-98`), and gives the interface
+to the UML with its MAC address (`:141-146`). `init` sets the address and
+the route on the same interface of the UML (`configure_bridged`,
+`:215-236`). Docker sends the traffic of the published ports to that
+address and MAC, which are now the UML's.
+
+Observed: in the UML `eth2` had `172.17.0.2/16`, `default via
+172.17.0.1` and the MAC that Docker gave the container interface
+(`02:42:ac:11:00:02`), the container interface had no address, and an
+HTTP server started inside the UML answered on the published port of the
+host.
 
 ### Management link
 
-`start` adds a veth pair inside the container (`UmlHelpers.py:58-59`):
+`start` adds a veth pair inside the container (`UmlHelpers.py:133-134`):
 `um0` keeps 169.254.77.1/30 in the container, `um1` is given to the UML
-as its last vector interface (`:66`). `init` renames that one `kmgmt`,
-gives it 169.254.77.2/30 (`:113-115`) and starts `sshd` on that address
-(`:133`). `ushell` is ssh from the container to `root@169.254.77.2`
-(`:149-173`), with a key that `start` creates in `/var/lib/kathara-uml/id`
-and copies to `/root/.ssh/authorized_keys` (`:47-53`); the UML reads that
-file through hostfs.
+as its last vector interface (`:147`). `init` renames that one `kmgmt`,
+gives it 169.254.77.2/30 (`:207-209`) and starts `sshd` on that address,
+without PAM (`:291-294`). `ushell` is ssh from the container to
+`root@169.254.77.2` (`:302-364`), with a key that `start` creates in
+`/var/lib/kathara-uml/id` and copies to `/root/.ssh/authorized_keys`
+(`make_key`, `:121-127`); the UML reads that file through hostfs.
+
+## Settings of a device
+
+Docker applies the settings of a device to its container. The UML has
+its own kernel, network stack, limits and filesystems, so each setting
+needs a way in. Kathara writes the settings that live inside the
+container into files of `/kathara-uml`, next to the helpers
+(`UmlSettings`, `UmlHelpers.py:392-418`), and the helpers apply them in
+the UML.
+
+| Kathara option | In a container | In a UML device | Where |
+|---|---|---|---|
+| `sysctl`, `ipv6`, the defaults of Kathara | Docker sets them in the network namespace | Kathara writes them, the interface ones included, to `sysctl.conf`; `init` applies them once the interfaces have their names, and logs to `/var/log/uml-sysctl.log` those the UML kernel refuses | `DockerMachine.py:300`, `apply_sysctls`, `UmlHelpers.py:242-254` |
+| MAC address of an interface | the network plugin sets it | the UML interface takes it, the container interface gets a random one | `take_mac`, `:64-70` |
+| `mem` | limit of the container | the UML gets three quarters of the limit, the rest is left to the UML process; without a limit 256M; `KATHARA_UML_MEM` overrides it | `uml_memory`, `:103-116` |
+| `cpus` | limit of the container | the same limit holds the UML process | Docker |
+| `env` | environment of the container | Kathara writes it to `environment`; `ushell` exports it, quoted, in front of each command and of the shell of `connect` | `exports`, `:336-345` |
+| `shell`, `device_shell` | the shell of `exec`, `connect` and the startup | Kathara writes it to `shell`; `ushell` runs each command as `<shell> -c <command>` and opens it for `connect` | `DockerMachine.py:391`, `device_shell`, `UmlHelpers.py:349-355` |
+| `ulimit` | limits of the processes of the container | Kathara writes them to `ulimit.conf`; `init` sets them on itself with `prlimit` before it starts `sshd`, and logs to `/var/log/uml-ulimit.log` those it cannot set | `apply_ulimits`, `:260-272` |
+| `bridged`, `port` | one more interface on the bridge of Docker, ports published to its address | the interface goes to the UML with its address, route and MAC | [above](#bridged-interface-and-published-ports) |
+| `exec`, the `.startup` file | run in the container | run in the UML through `ushell` | `DockerMachine.py:610` |
+| `volume`, `/shared`, `/hosthome` | bind mounts | the same files, through hostfs | [Files](#files) |
+| `entrypoint`, `args` | the main process of the container | refused: the UML kernel is the main process of the container | `DockerMachine.py:345-350` |
+| `privileged` | privileged container | the UML does not need it; in the UML everything runs as root of its own kernel | |
+
+Why `entrypoint` and `args` are refused: the entrypoint of a container is
+its main process, and the container lives as long as it does. In a UML
+device that process is the UML kernel. A program given as entrypoint
+could only run inside the UML as one more process, which would not keep
+the device alive and would start at a moment of its own: it would look
+like an entrypoint without behaving as one. Kathara used to replace the
+option without a word. Programs and daemons go in the startup file
+instead, which runs inside the UML: a daemon started there, or a program
+in the background with `&`, keeps running (observed: a second `sshd` and
+`sleep` started from the startup were still running after it).
+
+One difference is left: `kathara exec r "bash -c 'prog &'"` waits as
+long as `prog` runs, because `prog` keeps the output of the ssh session
+open (observed: the exec was still waiting after 20 s, while the same
+exec in a container returned in 4 s). Detach it:
+`nohup prog > /dev/null 2>&1 &`.
+
+`tests/check-settings.sh` gives the same options to a container and to a
+UML device and checks that both see the same.
 
 ## Boot options of the UML
 
-The command `start` runs (`UmlHelpers.py:79-82`):
+The command `start` runs (`UmlHelpers.py:161-164`):
 
 ```
 env TMPDIR=/tmp/uml /kathara-uml-kernel mem=256M \
     root=/dev/root rootfstype=hostfs rootflags=/ rw init=/kathara-uml/init \
     con0=fd:0,fd:1 con=null seccomp=auto \
-    vec0:transport=raw,ifname=eth0,depth=128,gro=1 ... \
+    vec0:transport=raw,ifname=eth0,depth=128,gro=1,mac=02:42:ac:11:00:0b ... \
     < /tmp/uml/stdin > /var/log/uml-console.log 2>&1
 ```
 
 | Option | What it does | Source |
 |---|---|---|
 | `TMPDIR=/tmp/uml` | the directory where UML creates the file that backs its memory | `arch/um/os-Linux/mem.c:83-90`, `:131-146`, `:212` |
-| `mem=256M` | the memory of the UML kernel; `KATHARA_UML_MEM` (`env` option) changes it | `arch/um/kernel/physmem.c:120-136`, `UmlHelpers.py:79` |
+| `mem=256M` | the memory of the UML kernel, from `uml_memory` (see [Settings of a device](#settings-of-a-device)) | `arch/um/kernel/physmem.c:120-136`, `UmlHelpers.py:151` |
 | `root=/dev/root` | only a name: `parse_root_device()` returns 0 when no block device has the name, and with `rootfstype` set the kernel then mounts a filesystem that needs no device, with the name as source (observed: "VFS: Mounted root (hostfs filesystem)") | `init/do_mounts.c:428-452`, `:394-397`, `:339-364` |
 | `rootfstype=hostfs` | the root filesystem is hostfs, which shows a directory of the host (here, of the container) | `init/do_mounts.c:122`, `fs/hostfs/hostfs_kern.c:1023-1026` |
 | `rootflags=/` | the mount data, for hostfs the host directory to show: `/` of the container | `init/do_mounts.c:121`, `fs/hostfs/hostfs_kern.c:1006-1020` |
 | `rw` | mount the root read-write; the default is read-only | `init/do_mounts.c:31`, `:45-54` |
-| `init=/kathara-uml/init` | the first process of the UML: the `init` helper | `UmlHelpers.py:85-139` |
+| `init=/kathara-uml/init` | the first process of the UML: the `init` helper | `UmlHelpers.py:167-300` |
 | `con0=fd:0,fd:1` | console 0 reads fd 0 and writes fd 1 of the UML process | UML howto ("fd channel") |
 | `con=null` | the other consoles discard input and output | UML howto ("null channel") |
-| `seccomp=auto` | run the UML processes in the seccomp mode if it works, else in the ptrace mode; `KATHARA_UML_SECCOMP` changes it | `arch/um/os-Linux/start_up.c:424-489`, `UmlHelpers.py:69` |
+| `seccomp=auto` | run the UML processes in the seccomp mode if it works, else in the ptrace mode; `KATHARA_UML_SECCOMP` changes it | `arch/um/os-Linux/start_up.c:424-489`, `UmlHelpers.py:150` |
 | `vecK:transport=raw` | a network interface `vecK` on raw packet sockets | UML howto ("raw socket transport"), `vector_user.c:521-560` |
 | `ifname=ethK` | the interface of the container the sockets bind to | UML howto ("Shared Options") |
 | `depth=128` | frames read or written per system call; the default is 64 | UML howto ("Common options"), `vector_kern.c:81` |
 | `gro=1` | receive/transmit offloads; the howto says it must match the host side and that veth has GRO on | UML howto ("Common options") |
+| `mac=...` | the MAC address of the interface | UML howto ("Common options") |
 
 The UML howto is `Documentation/virt/uml/user_mode_linux_howto_v2.rst`
 of the kernel tree.
@@ -224,12 +321,13 @@ VFS: Mounted root (hostfs filesystem) on device 0:17.
 ```
 
 stdin is a FIFO kept open by `sleep infinity`, and the console goes to a
-file (`UmlHelpers.py:74-82`): with a pipe on stdout or stdin at end of
+file (`UmlHelpers.py:155-164`): with a pipe on stdout or stdin at end of
 file the UML stops early in the boot (see README, "Things to know").
 
 The seccomp mode: see README, "seccomp or ptrace", for what it changes and
 what it costs. Observed with `seccomp=auto` under KVM:
-`Checking that seccomp filters can be installed...OK`.
+`Checking that seccomp filters can be installed...OK`. UML 6.12.118 has
+no seccomp mode, and runs in the ptrace one.
 
 ## Files
 
@@ -245,15 +343,31 @@ what it costs. Observed with `seccomp=auto` under KVM:
 ```
 
 The UML has no disk: its root is the container's own `/`, through hostfs.
-The image, the files Kathara copies into the container, `/shared`,
-`/hosthome` and the volumes are all there. A file the UML writes goes
-where a write of the container goes. Observed: a file written from the
-UML (`kathara exec r "bash -c 'echo from-uml > /root/arch-probe'"`) was
-in the upper directory of the container's overlay2.
+The image, the files Kathara copies into the container, `/run`,
+`/shared`, `/hosthome` and the volumes are all there. A file the UML
+writes goes where a write of the container goes. Observed: a file
+written from the UML (`kathara exec r "bash -c 'echo from-uml >
+/root/arch-probe'"`) was in the upper directory of the container's
+overlay2.
 
-`init` mounts `/proc`, `/sys`, `/dev`, `/dev/pts`, `/run` and
-`/sys/fs/bpf` of the UML (`UmlHelpers.py:93-101`): those are the UML
-kernel's own, not the container's.
+On top of it `init` mounts what Docker mounts in a container, from the
+UML kernel and with the options Docker gives them in a Kathara device
+(`mount_filesystems`, `UmlHelpers.py:185-195`): `/proc`, `/sys`,
+`/dev/pts`, `/dev/shm` (tmpfs, 64 MB), `/dev/mqueue` and `/sys/fs/cgroup`
+(read-only), plus `/sys/fs/bpf`. `/dev` is the devtmpfs of the UML
+kernel, with its own devices. Observed, mount points and types in a
+container device and in the UML of a UML device: the same, but for `/`
+(overlay against hostfs), `/dev` (tmpfs against devtmpfs), the bind
+mounts, which the UML sees as files of its `/`, and the masks of `/proc`
+and `/sys` that Docker adds to a container.
+
+`/etc/hosts` and `/etc/resolv.conf`: Docker mounts its own in a
+container, and the startup of Kathara unmounts them first, so that the
+device finds the files of the image and Kathara writes its `/etc/hosts`.
+In a UML device that startup runs inside the UML, where they are not
+mounts, so `start` unmounts them in the container before the UML boots
+(`:39-42`). Observed: `/etc/hosts` and `/etc/resolv.conf` were the same
+in a container device and in a UML device.
 
 The hostfs caveat of the howto applies ("Hostfs Caveats"): if a file is
 changed outside the UML, the UML does not know it, and its in-memory cache
@@ -265,14 +379,16 @@ open in the UML while the host changes it was not tested.
 
 ```
  kathara exec r "ip -br addr"
-   -> exec(): ["/kathara-uml/ushell", "-c", "ip -br addr"]      DockerMachine.py:842-843
+   -> exec(): ["/kathara-uml/ushell", "-c", "ip -br addr"]      DockerMachine.py:858-859
    -> docker exec in container r
-   -> ushell: ssh -T root@169.254.77.2 -- "ip -br addr"          UmlHelpers.py:169-172
+   -> ushell: ssh -T root@169.254.77.2 -- \
+        "export VAR=...; exec <shell> -c 'ip -br addr'"          UmlHelpers.py:359-362
    -> sshd in the UML runs it, the output and the exit code come back
 
  kathara connect r
-   -> the shell label: /kathara-uml/ushell                     DockerMachine.py:710-711
-   -> ushell: ssh -t root@169.254.77.2                          UmlHelpers.py:173
+   -> the shell label: /kathara-uml/ushell                     DockerMachine.py:726-727
+   -> ushell: ssh -t root@169.254.77.2 -- "export ...; exec <shell>"
+                                                                UmlHelpers.py:363
 ```
 
 The startup commands of Kathara (`STARTUP_COMMANDS`,
@@ -302,6 +418,8 @@ kathara exec r "ip -br addr"                                   # the UML side
 docker exec $(docker ps -qf name=_r_) ip -br addr              # the container side
 docker exec $(docker ps -qf name=_r_) cat /var/log/uml-start.log
 docker exec $(docker ps -qf name=_r_) cat /var/log/uml-console.log
+docker exec $(docker ps -qf name=_r_) cat /var/log/uml-sysctl.log
+docker exec $(docker ps -qf name=_r_) cat /var/log/uml-ulimit.log
 docker exec $(docker ps -qf name=_r_) cat /proc/net/packet
 docker exec $(docker ps -qf name=_r_) cat /var/tmp/uml-status  # written by init every 2 s
 ```

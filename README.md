@@ -43,6 +43,14 @@ normal startup file that configures `eth0` and `eth1`. Its
 `../../out/kernel`: point the link elsewhere (`ln -sfn`) to run `r` on
 another kernel. Links in the path are resolved before the mount.
 
+The other options of the device work as on a container: the UML gets its
+sysctls, the MAC addresses of its interfaces, its memory limit, its
+environment, its shell, its ulimits and, with `bridged`, the bridged
+interface with its published ports. `entrypoint` and `args` cannot be
+used with `kernel`: the UML kernel is the entrypoint of the container,
+and programs start from the startup file. See [Settings of a
+device](ARCHITECTURE.md#settings-of-a-device).
+
 ## How it works
 
 [ARCHITECTURE.md](ARCHITECTURE.md) has the details: the boot sequence,
@@ -224,8 +232,14 @@ The tests share their helpers, `check`, `finish` and a few others, in
   its cache (see the hostfs section of the UML howto). The shared folder
   tests read each file with a new process and saw every change; a file
   kept open or mapped in the UML while the host changes it was not tested.
-- `kathara exec` never runs a shell, for any device: pipes and redirections
-  need `bash -c '...'`.
+- `kathara exec` runs the command without a shell in a container, and in
+  the shell of the device in a UML device, which reaches the UML through
+  ssh: pipes and redirections work only there. Write `bash -c '...'` for
+  both.
+- `kathara exec` of a program in the background (`prog &`) waits in a
+  UML device as long as the program runs, because the program keeps the
+  output of the ssh session open: detach it, `nohup prog > /dev/null 2>&1
+  &`. From the startup file it does not wait.
 - UML is fast under KVM and slow under emulation (TCG): see below.
 
 ## Measurements
