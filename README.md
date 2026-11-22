@@ -66,7 +66,11 @@ Kathara
    [UmlHelpers.py](kathara/src/Kathara/manager/docker/UmlHelpers.py) into
    `/kathara-uml`;
 2. after attaching every interface, touches `/run/kathara-uml.ready`;
-3. runs `kathara exec` through the device shell.
+3. waits until the UML has booted, that is until its init has touched
+   `/run/kathara-uml.booted`: if the container exits, the kernel panics
+   or 120 s pass, lstart fails with the reason and lines of the UML
+   console;
+4. runs `kathara exec` through the device shell.
 
 In the container, `start` waits for that file, adds a management veth
 (`um0`, 169.254.77.1/30, for the container; `um1` for the UML) and boots
