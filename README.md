@@ -38,7 +38,10 @@ OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
 
 [examples/router](examples/router) is a complete lab: `a` and `b` are
 containers, `r` is a router on a UML kernel, and its `r.startup` is a
-normal startup file that configures `eth0` and `eth1`.
+normal startup file that configures `eth0` and `eth1`. Its
+`r[kernel]="kernel/linux"` goes through `kernel`, a link to
+`../../out/kernel`: point the link elsewhere (`ln -sfn`) to run `r` on
+another kernel. Links in the path are resolved before the mount.
 
 ## How it works
 
