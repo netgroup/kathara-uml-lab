@@ -182,6 +182,11 @@ vm/vm.sh stop
 codes, startup in the UML, ping and first hop, `connect`, `lclean`).
 [tests/check-shared.sh](tests/check-shared.sh) checks `/shared` from the
 host, from the UML and from a container.
+[tests/check-ushell.sh](tests/check-ushell.sh) checks the shell of a UML
+device while the `sshd` of the UML is gone, while the management link is
+down and while the key of `ushell` is not there yet: the command must
+arrive once they are back, run once and give back its exit code. It uses
+a copy of the router lab in a temporary directory.
 [tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
 container and checks that `bpf_printk()` works (`printk`) or is refused
 because of the helper (`refused`).
