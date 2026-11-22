@@ -27,6 +27,12 @@
       with `tests/bench-uml.sh`, make it the default only if it helps.
 - [ ] **Prebuilt test kernel**, attached to a release of the fork, so a
       lab does not need a kernel build first.
+- [ ] **Bridged UML devices.** With `bridged`, Kathara adds one more
+      interface to the container, numbered after the others
+      (DockerMachine.py:266-267) and attached in start() after them
+      (:566-568). KATHARA_UML_IFACES counts only `machine.interfaces`
+      (:344), so start gives the UML eth0 ... ethN-1 and not the bridged
+      one. Read from the code, not tried: hand it over too, and test.
 - [ ] **Kubernetes manager**: only the Docker manager knows the kernel
       option today.
 
