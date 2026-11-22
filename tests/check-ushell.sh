@@ -12,6 +12,9 @@
 #
 # Prints one OK/FAIL line per check and exits non-zero if one failed.
 
+# shellcheck source=lib.sh source-path=SCRIPTDIR
+. "$(dirname "$0")/lib.sh"
+
 HERE=$(cd "$(dirname "$0")" && pwd)
 KERNEL=$(realpath "${1:-$HERE/../out/kernel/linux}")
 SSHD="/usr/sbin/sshd -o ListenAddress=169.254.77.2 -o UseDNS=no -o PermitRootLogin=prohibit-password"
@@ -19,36 +22,6 @@ SSHD="/usr/sbin/sshd -o ListenAddress=169.254.77.2 -o UseDNS=no -o PermitRootLog
 # exec under test starts 1 s later: it waits at least OUTAGE - 2 s.
 OUTAGE=10
 MIN_WAIT=$((OUTAGE - 2))
-fails=0
-
-check()
-{
-	local what=$1 got=$2 want=$3
-
-	if [ "$got" = "$want" ]; then
-		echo "OK   $what"
-	else
-		echo "FAIL $what: got '$got', want '$want'"
-		fails=$((fails + 1))
-	fi
-}
-
-check_at_least()
-{
-	local what=$1 got=$2 min=$3
-
-	if awk -v g="$got" -v m="$min" 'BEGIN { exit !(g >= m) }'; then
-		echo "OK   $what ($got s)"
-	else
-		echo "FAIL $what: took $got s, want at least $min s"
-		fails=$((fails + 1))
-	fi
-}
-
-elapsed()
-{
-	awk -v a="$1" -v b="$(date +%s.%N)" 'BEGIN { printf "%.1f", b - a }'
-}
 
 # The container of r of this lab: the one that mounts its shared folder.
 container_of_r()
@@ -137,9 +110,4 @@ kathara exec -d "$LAB" r "sh -c 'echo run >> /root/ushell-runs; exit 255'" >/dev
 check "exit code 255" "$?" 255
 check "a command that exits with 255 runs once" "$(uml "bash -c 'wc -l < /root/ushell-runs'")" 1
 
-if [ "$fails" = 0 ]; then
-	echo "CHECK_USHELL=PASS"
-else
-	echo "CHECK_USHELL=FAIL ($fails)"
-fi
-exit "$fails"
+finish USHELL

@@ -205,6 +205,9 @@ vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/printk &&
 vm/vm.sh ssh bash /opt/kathara-uml/tests/check-printk-lab.sh /opt/kathara-uml/out/printk/linux
 ```
 
+The tests share their helpers, `check`, `finish` and a few others, in
+[tests/lib.sh](tests/lib.sh).
+
 ## Things to know
 
 - The UML console goes to `/var/log/uml-console.log` of the container,
