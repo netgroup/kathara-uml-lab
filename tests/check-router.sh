@@ -5,7 +5,9 @@
 #
 #   check-router.sh [lab dir]     (default: ../examples/router)
 #
-# Prints one OK/FAIL line per check and exits non-zero if one failed.
+# Prints one OK/FAIL line per check and exits non-zero if one failed. With
+# CHECK_LOGS set to a directory, a failed run keeps there the logs of r
+# before its lab is cleaned.
 
 # shellcheck source=lib.sh source-path=SCRIPTDIR
 . "$(dirname "$0")/lib.sh"
@@ -36,6 +38,25 @@ connect_output()
 		sleep 3
 	} | timeout 30 script -qec 'kathara connect r' /dev/null > /tmp/check-router-connect.log 2>&1
 	tr -d '\r' < /tmp/check-router-connect.log | sed 's/\x1b\[[0-9;?]*[a-zA-Z]//g'
+}
+
+# The logs of the container and of the UML of r, into CHECK_LOGS, when a
+# check failed and CHECK_LOGS is set.
+keep_logs()
+{
+	local r=$1 log
+
+	if [ "$fails" = 0 ] || [ -z "$CHECK_LOGS" ]; then
+		return
+	fi
+	mkdir -p "$CHECK_LOGS"
+	for log in /var/log/uml-start.log /var/log/uml-console.log /var/log/uml-sysctl.log \
+		/var/log/uml-ulimit.log /var/log/startup.log /var/tmp/uml-status; do
+		docker exec "$r" cat "$log" > "$CHECK_LOGS/$(basename "$log")" 2>&1
+	done
+	docker logs "$r" > "$CHECK_LOGS/docker-logs" 2>&1
+	cp /tmp/check-router-lstart.log /tmp/check-router-connect.log "$CHECK_LOGS/" 2>/dev/null
+	echo "     logs of r in $CHECK_LOGS"
 }
 
 cd "$LAB" || exit 1
@@ -74,6 +95,7 @@ check "first hop is r" "$(kathara exec a "traceroute -n -m 1 10.0.2.1" | awk 'NR
 
 check "connect r opens a shell in the UML" "$(connect_output | grep -c "^KMARK $uml")" 1
 
+keep_logs "$r"
 start=$(date +%s.%N)
 kathara lclean >/dev/null 2>&1
 check "lclean" "$?" 0
