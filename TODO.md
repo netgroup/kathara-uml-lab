@@ -30,6 +30,24 @@
 - [ ] **Kubernetes manager**: only the Docker manager knows the kernel
       option today.
 
+## Seen in the tests, not explained
+
+- [ ] **A router run that failed.** One run of `check-router.sh` out of
+      five, the first after a boot of the test VM (2026-11-22): `exec r`
+      printed nothing and the startup of r did not run. A race found
+      since, the key of ushell made 40 ms after the ready file and ssh
+      without the key exiting at once with 255, is fixed in the fork.
+      After the fix 10 runs passed, 3 of them the first after a boot;
+      that the race was the only cause is not proven.
+- [ ] **SIGSTOP in the UML.** In the seccomp mode, `kill -STOP` of the
+      sshd listener inside the UML: `ps` shows it as `Ts`, yet new
+      connections still get the ssh banner (UML 7.3.5). Not tried in the
+      ptrace mode.
+- [ ] **A test that did not clean.** One run of `check-ushell.sh` out of
+      four left its lab running and its directory in /tmp: the EXIT trap
+      did not run its `kathara lclean`. Three more runs, one with
+      `bash -x`, cleaned.
+
 ## Patches
 
 - [ ] `uml-kernel/patches/7.3` carries "bpf: Build bpf_trace_printk()
