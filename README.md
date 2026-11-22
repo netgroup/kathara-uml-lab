@@ -240,6 +240,8 @@ The tests share their helpers, `check`, `finish` and a few others, in
   UML device as long as the program runs, because the program keeps the
   output of the ssh session open: detach it, `nohup prog > /dev/null 2>&1
   &`. From the startup file it does not wait.
+- 169.254.77.0/30 is reserved in a UML device: it is the management link
+  between the container and the UML, in the network stack of the UML.
 - UML is fast under KVM and slow under emulation (TCG): see below.
 
 ## Measurements
