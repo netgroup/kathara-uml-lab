@@ -42,7 +42,10 @@
       printed nothing and the startup of r did not run. A race found
       since, the key of ushell made 40 ms after the ready file and ssh
       without the key exiting at once with 255, is fixed in the fork.
-      After the fix 10 runs passed, 3 of them the first after a boot;
+      After the fix 10 runs passed, 3 of them the first after a boot,
+      and then 20 cycles of boot, install and check-router.sh as the
+      first lab (Kathara 21b6c44, a315168 after the brace rewrite,
+      2026-11-22, out/boot-cycles.log);
       that the race was the only cause is not proven.
 - [ ] **SIGSTOP in the UML.** In the seccomp mode, `kill -STOP` of the
       sshd listener inside the UML: `ps` shows it as `Ts`, yet new
@@ -51,7 +54,8 @@
 - [ ] **A test that did not clean.** One run of `check-ushell.sh` out of
       four left its lab running and its directory in /tmp: the EXIT trap
       did not run its `kathara lclean`. Three more runs, one with
-      `bash -x`, cleaned.
+      `bash -x`, cleaned, and so did the 20 runs of the boot cycles
+      (no container and no lab left after any of them).
 
 ## Patches
 
