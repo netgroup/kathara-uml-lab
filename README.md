@@ -45,7 +45,10 @@ another kernel. Links in the path are resolved before the mount.
 
 ## How it works
 
-For a device with `kernel`, Kathara
+[ARCHITECTURE.md](ARCHITECTURE.md) has the details: the boot sequence,
+the network path of a packet, every boot option of the UML and what it
+is for, the files and the shell. In short, for a device with `kernel`,
+Kathara
 ([DockerMachine.py](kathara/src/Kathara/manager/docker/DockerMachine.py)):
 
 1. creates the container with the kernel mounted read-only in
