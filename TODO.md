@@ -59,6 +59,17 @@
 - [ ] Kathara develops on `develop`, ahead of `main` (this branch is on
       `main`, 3.8.4) and with changes in DockerMachine.py: rebase there
       before proposing anything.
+- [ ] **The helpers as files.** start, init and ushell are bash kept in
+      Python strings in UmlHelpers.py, because setup.py has no
+      package_data and the PyInstaller spec has `datas=[]`. Ship them as
+      files of the package instead, which touches the packaging of
+      Kathara.
+- [ ] **Fixed values.** The management link, 169.254.77.0/30, and the
+      path of the key of ushell are written in the helpers: make them
+      settings, or say why they need not be.
+- [ ] **Tests in Kathara.** Kathara runs only the pytest tests of the
+      fork; the lab tests of this repository run in the test VM. Find out
+      what the authors of Kathara would want in their own test suite.
 
 ## Elsewhere
 
