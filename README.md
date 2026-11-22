@@ -54,7 +54,7 @@ For a device with `kernel`, Kathara
    number of interfaces), and copies the helpers of
    [UmlHelpers.py](kathara/src/Kathara/manager/docker/UmlHelpers.py) into
    `/kathara-uml`;
-2. after attaching every interface, touches `/run/kathara-uml.go`;
+2. after attaching every interface, touches `/run/kathara-uml.ready`;
 3. runs `kathara exec` through the device shell.
 
 In the container, `start` waits for that file, adds a management veth
