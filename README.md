@@ -190,6 +190,12 @@ device while the `sshd` of the UML is gone, while the management link is
 down and while the key of `ushell` is not there yet: the command must
 arrive once they are back, run once and give back its exit code. It uses
 a copy of the router lab in a temporary directory.
+[tests/check-settings.sh](tests/check-settings.sh) gives the same Kathara
+options (sysctl, MAC address, env, shell, ulimit, bridged, port) to a
+container and to a UML device and checks that both see the same: the
+sysctls, the address, the variables, the shell, the limits,
+`/etc/hosts`, the resolver, the filesystems and the published ports. It
+also checks that entrypoint is refused with kernel.
 [tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
 container, with [tests/uml-run.sh](tests/uml-run.sh), and checks that
 `bpf_printk()` works (`printk`) or is refused because of the helper
