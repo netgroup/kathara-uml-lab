@@ -16,5 +16,9 @@ CONFIG_UNIX=y
 # kathara connect: ssh -t needs ptys.
 CONFIG_UNIX98_PTYS=y
 
+# net.ipv4.tcp_syncookies, which a lab may set with the sysctl option as
+# on a container, exists only with it.
+CONFIG_SYN_COOKIES=y
+
 # The kernel is one file, mounted in the container.
 CONFIG_MODULES=n
