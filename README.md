@@ -215,6 +215,10 @@ container and to a UML device and checks that both see the same: the
 sysctls, the address, the variables, the shell, the limits,
 `/etc/hosts`, the resolver, the filesystems and the published ports. It
 also checks that entrypoint is refused with kernel.
+[tests/check-boot.sh](tests/check-boot.sh) checks that lstart fails, with
+the reason and within seconds, and leaves no container behind, when r is
+on a file that is not a UML kernel and on a UML kernel with too little
+memory, whose container exits (4M) or whose kernel panics (16M).
 [tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
 container, with [tests/uml-run.sh](tests/uml-run.sh), and checks that
 `bpf_printk()` works (`printk`) or is refused because of the helper
