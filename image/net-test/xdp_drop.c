@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
+ * author: Andrea Mayer <andrea.mayer@uniroma2.it>
+ *
  * Drops every frame, for check-net.sh: attached with ip link xdpgeneric.
  * Each drop leaves a line in the trace buffer, through bpf_printk.
  */

@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Runs in the VM container (foreground, PID 1): fetches and checks the
 # Debian cloud image once, serves a cloud-init seed over HTTP, then runs
 # the VM under KVM. /vm is the VM directory of the work dir.

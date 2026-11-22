@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # QEMU/KVM, qemu-img, ssh and python3 (cloud-init seed over HTTP) to run
 # and drive the test VM of vm/vm.sh.
 FROM docker.io/library/debian:trixie-slim

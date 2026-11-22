@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Test image for tc and XDP in UML devices: kathara/base plus clang
 # (Debian 12 packages), with xdp_drop.c and tc_drop.c built in /net.
 FROM kathara/base

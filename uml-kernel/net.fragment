@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Traffic control and netfilter in the UML kernel, as a Kathara device has
 # them on the kernel of the host: tc with the common qdiscs, classifiers
 # and actions, eBPF ones included, and nftables with conntrack, NAT and

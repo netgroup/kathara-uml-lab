@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # The lab's shared folder (/shared) seen by a container device (a) and by
 # a UML device (r, through hostfs), with writes from the host side and
 # from inside the UML. Uses examples/router.

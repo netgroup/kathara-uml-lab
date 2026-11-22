@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Cost of running in a UML device: the micro-tests of bench-tests.sh in a
 # plain container, then inside a UML kernel in the ptrace mode
 # (seccomp=off, the kernel default) and in the seccomp mode (seccomp=on).

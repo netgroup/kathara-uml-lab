@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # The part of build.sh that runs in the builder container: get the
 # sources, configure, check the fragments, build, strip, write BUILD-INFO.
 #

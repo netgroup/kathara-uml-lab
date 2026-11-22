@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Test image for bpf_printk in UML devices: kathara/base plus bpftool and
 # clang (Debian 12 packages), with prog.c built in /printk/prog.o and
 # run.sh, which loads and runs it inside a UML, in /printk/run.sh.

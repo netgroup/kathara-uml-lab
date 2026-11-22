@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # tc, netfilter and XDP inside a UML device. In a copy of the router lab,
 # r runs on a UML kernel built with net.fragment and trace.fragment, and
 # on the image image/net-test; each check changes, inside the UML of r,

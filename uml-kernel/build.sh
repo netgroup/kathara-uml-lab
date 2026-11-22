@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Build a UML kernel for Kathara devices, in a podman container (nothing is
 # installed on the host). The result is a stripped `linux` binary that a
 # lab uses with dev[kernel]="<path>".

@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Runs inside a UML: loads the socket filter of prog.c, runs it once with
 # BPF_PROG_TEST_RUN and prints its bpf_printk line from the trace buffer.
 # If the verifier refuses the program, prints LOAD_REFUSED and the line of

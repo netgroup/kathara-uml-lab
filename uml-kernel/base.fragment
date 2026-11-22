@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Options every UML kernel for a Kathara device needs, on top of
 # `make ARCH=um defconfig`. build.sh fails if one of them does not stick.
 

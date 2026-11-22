@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Build container for the UML kernel. Debian 12 links the kernel against
 # glibc 2.36 symbols at most (GLIBC_2.34 measured), so it runs on bookworm
 # based device images such as kathara/base and on anything newer. A UML

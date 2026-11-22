@@ -1,3 +1,5 @@
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Helpers shared by the tests, sourced by them:
 #
 #   . "$(dirname "$0")/lib.sh"

@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # The micro-tests of bench-uml.sh, with only dd, bash and awk, which every
 # image has. Prints one line "BENCH <where> <test> <seconds>" per test;
 # <where> is WHERE from the environment.

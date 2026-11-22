@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # bpf_printk from inside a Kathara UML device: a lab with one device, r,
 # on a UML kernel built with patches/ and trace.fragment and on the image
 # image/printk-test. kathara exec runs /printk/run.sh of the image in r,

@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # The settings of Kathara on a UML device against the same settings on a
 # container device: a is a container, r a UML device, both with the same
 # sysctl, env, shell, ulimit, bridged and port options and a MAC address

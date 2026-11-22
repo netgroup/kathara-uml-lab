@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Test VM for UML devices: a Debian 13 VM under KVM, with QEMU in a podman
 # container. Docker, this tree with the Kathara of its submodule and the
 # device image are installed INSIDE the VM, so the tests touch neither the
@@ -36,7 +38,7 @@ die()
 
 usage()
 {
-	sed -n '2,18p' "$0"
+	sed -n '4,20p' "$0"
 	exit 1
 }
 

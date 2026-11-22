@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Runs in the test VM, from the tree that vm.sh install copied into
 # /opt/kathara-uml: installs Docker and python3-venv if they are missing,
 # Kathara from the kathara submodule in a venv in /opt/kathara, and a

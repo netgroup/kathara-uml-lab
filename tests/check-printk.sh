@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # bpf_printk in a UML kernel, without a Kathara lab: the UML boots in a
 # container of image/printk-test (tests/uml-run.sh) and runs its run.sh,
 # which loads a socket filter that calls bpf_printk, runs it once and looks

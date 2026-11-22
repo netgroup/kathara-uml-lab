@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Boots the UML kernel /kathara-uml-kernel in this container, on the
 # container's own / (hostfs) as in a UML device, runs a command as its
 # init and prints the console of the UML. For the tests that need a UML

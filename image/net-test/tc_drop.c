@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
+ * author: Andrea Mayer <andrea.mayer@uniroma2.it>
+ *
  * Drops every packet, for check-net.sh: attached with tc filter ... bpf da.
  * Each drop leaves a line in the trace buffer, through bpf_printk.
  */

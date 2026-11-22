@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-/* A socket filter that calls bpf_printk(): the tests run it once with
+/*
+ * author: Andrea Mayer <andrea.mayer@uniroma2.it>
+ *
+ * A socket filter that calls bpf_printk(): the tests run it once with
  * BPF_PROG_TEST_RUN and look for its line in the trace buffer.
  */
 #include <linux/bpf.h>

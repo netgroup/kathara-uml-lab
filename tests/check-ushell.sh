@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Test of the shell of a UML device, /kathara-uml/ushell, while the sshd
 # of the UML cannot be reached and while its key is not there yet: a
 # command must arrive once both are back, run once, and give back its exit

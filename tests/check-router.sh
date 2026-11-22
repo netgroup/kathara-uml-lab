@@ -1,4 +1,6 @@
 #!/bin/bash
+# author: Andrea Mayer <andrea.mayer@uniroma2.it>
+#
 # Test of a UML device with the example lab examples/router (a and b
 # are containers, r runs on its own UML kernel). Run it where Kathara and
 # the lab are, for example in the test VM: `vm/vm.sh test`.
