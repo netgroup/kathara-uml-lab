@@ -10,7 +10,8 @@
 #                        VM, install Docker and Kathara (install-in-vm.sh)
 #   vm.sh test           run tests/check-router.sh and check-shared.sh
 #   vm.sh ssh [cmd...]   a command (or a shell) in the VM
-#   vm.sh stop           stop the VM (its disk stays in the work dir)
+#   vm.sh stop           shut the VM down and remove its container (its
+#                        disk stays in the work dir)
 #
 # VM_MEM (default 6G) and VM_CPUS (default 4) size the VM. /dev/kvm is
 # needed; when the user cannot open it, podman runs through sudo, and the
@@ -35,7 +36,7 @@ die()
 
 usage()
 {
-	sed -n '2,17p' "$0"
+	sed -n '2,18p' "$0"
 	exit 1
 }
 
@@ -142,6 +143,25 @@ do_test()
 	return "$failed"
 }
 
+# Shuts the VM down cleanly, then removes its container. Killing QEMU
+# right after a test may leave the containers that Docker was removing in
+# the VM as Dead, at the next boot. Waits up to 120 s for the shutdown.
+do_stop()
+{
+	local s
+
+	if running; then
+		vssh poweroff >/dev/null 2>&1
+		for ((s = 0; s < 120; s++)); do
+			if ! running; then
+				break
+			fi
+			sleep 1
+		done
+	fi
+	"${PM[@]}" rm -f "$NAME" >/dev/null && echo "VM stopped"
+}
+
 do_ssh()
 {
 	ensure_running
@@ -176,7 +196,7 @@ ssh)
 	do_ssh "$@"
 	;;
 stop)
-	"${PM[@]}" rm -f "$NAME" >/dev/null && echo "VM stopped"
+	do_stop
 	;;
 *)
 	usage
