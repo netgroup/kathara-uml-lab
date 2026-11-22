@@ -191,11 +191,12 @@ down and while the key of `ushell` is not there yet: the command must
 arrive once they are back, run once and give back its exit code. It uses
 a copy of the router lab in a temporary directory.
 [tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
-container and checks that `bpf_printk()` works (`printk`) or is refused
-because of the helper (`refused`).
+container, with [tests/uml-run.sh](tests/uml-run.sh), and checks that
+`bpf_printk()` works (`printk`) or is refused because of the helper
+(`refused`).
 [tests/check-printk-lab.sh](tests/check-printk-lab.sh) checks it from
-inside a UML device of a lab, through `kathara exec`. Both take the
-kernel as argument:
+inside a UML device of a lab, through `kathara exec`. Both run
+`/printk/run.sh` of the test image and take the kernel as argument:
 
 ```
 uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment --out out/printk

@@ -1,8 +1,9 @@
 #!/bin/bash
 # bpf_printk from inside a Kathara UML device: a lab with one device, r,
 # on a UML kernel built with patches/ and trace.fragment and on the image
-# image/printk-test. kathara exec loads the socket filter of prog.c in
-# r, runs it once and reads its line from the trace buffer of r's kernel.
+# image/printk-test. kathara exec runs /printk/run.sh of the image in r,
+# which loads the socket filter of prog.c, runs it once and reads its line
+# from the trace buffer of r's kernel.
 #
 #   check-printk-lab.sh <UML kernel>
 #
@@ -40,13 +41,7 @@ check "r is a UML device" "$(docker inspect "$r" --format '{{index .Config.Label
 uml=$(kathara exec r "uname -r" | tr -d '\r')
 check "exec r runs in the UML kernel" "$(other_kernel "$uml")" yes
 
-out=$(kathara exec r "bash -c '
-	mountpoint -q /sys/kernel/tracing || mount -t tracefs tracefs /sys/kernel/tracing
-	bpftool prog load /printk/prog.o /sys/fs/bpf/printk_test || exit 1
-	head -c 64 /dev/zero > /tmp/pkt
-	bpftool prog run pinned /sys/fs/bpf/printk_test data_in /tmp/pkt repeat 1 >/dev/null
-	sleep 1
-	grep -m1 -o \"KATHARA_UML_PRINTK len=[0-9]*\" /sys/kernel/tracing/trace'" 2>&1 | tr -d '\r')
+out=$(kathara exec r /printk/run.sh 2>&1 | tr -d '\r' | grep '^KATHARA_UML_PRINTK')
 echo "     r ($uml): $out"
 check "bpf_printk line in the trace buffer of r" "$(echo "$out" | grep -c '^KATHARA_UML_PRINTK len=[0-9]*$')" 1
 
