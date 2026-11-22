@@ -153,6 +153,13 @@ tmpfs, IPv4/IPv6, ptys), then the given fragments. The build fails if an
 option of a fragment does not stick. The result is `out/kernel/linux`,
 stripped, with `linux.config` and `BUILD-INFO`.
 
+[net.fragment](uml-kernel/net.fragment) adds tc (qdiscs, classifiers and
+actions, the eBPF ones included) and netfilter (nftables, conntrack, NAT,
+and iptables both over nftables and with its legacy tables). XDP programs
+attach in the generic mode and need no option of their own.
+[tests/check-net.sh](tests/check-net.sh) checks them, iptables only over
+nftables, as kathara/base has it.
+
 The builder is Debian 12 on purpose. UML is a dynamic binary: linked on a
 newer glibc it fails on bookworm based images such as `kathara/base`
 ("GLIBC_2.38 not found"). Built on Debian 12 it needs GLIBC_2.34 at most.
@@ -218,6 +225,23 @@ vm/vm.sh install
 vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/printk &&
 	cat > /opt/kathara-uml/out/printk/linux && chmod 755 /opt/kathara-uml/out/printk/linux' < out/printk/linux
 vm/vm.sh ssh bash /opt/kathara-uml/tests/check-printk-lab.sh /opt/kathara-uml/out/printk/linux
+```
+
+[tests/check-net.sh](tests/check-net.sh) checks tc, netfilter and XDP
+inside a UML device: a netem delay, a classic and an eBPF tc filter, a
+generic XDP program, an iptables FORWARD rule and a MASQUERADE. The eBPF
+programs write a line per drop with `bpf_printk()`, which the test looks
+for in the trace buffer of the UML. It needs a kernel built with
+net.fragment and trace.fragment, and it builds its image from
+[image/net-test](image/net-test):
+
+```
+uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment \
+	--fragment uml-kernel/net.fragment --out out/kernel-net
+vm/vm.sh install
+vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/kernel-net &&
+	cat > /opt/kathara-uml/out/kernel-net/linux && chmod 755 /opt/kathara-uml/out/kernel-net/linux' < out/kernel-net/linux
+vm/vm.sh ssh bash /opt/kathara-uml/tests/check-net.sh /opt/kathara-uml/out/kernel-net/linux
 ```
 
 The tests share their helpers, `check`, `finish` and a few others, in
