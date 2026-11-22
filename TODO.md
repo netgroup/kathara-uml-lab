@@ -56,9 +56,6 @@
 
 ## Upstream Kathara
 
-- [ ] Kathara develops on `develop`, ahead of `main` (this branch is on
-      `main`, 3.8.4) and with changes in DockerMachine.py: rebase there
-      before proposing anything.
 - [ ] **The helpers as files.** start, init and ushell are bash kept in
       Python strings in UmlHelpers.py, because setup.py has no
       package_data and the PyInstaller spec has `datas=[]`. Ship them as

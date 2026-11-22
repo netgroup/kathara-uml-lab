@@ -6,10 +6,12 @@ the UML boot options are for, and how the files and the shell of the
 device get into the UML.
 
 Line numbers refer to the Kathara of the `kathara` submodule
-(`src/Kathara/manager/docker/`, at b905aaf) and, for the kernel, to a
-tree at v7.4-rc2-492-g533ec433efdc, not to the 7.3.5 sources the test
-kernel is built from. The outputs under "Observed" come from the router lab in the test
-VM, on 2026-11-21, with the 7.3.5 kernel of `out/kernel`.
+(`src/Kathara/manager/docker/`, at 13222d1, on Kathara's `develop`) and,
+for the kernel, to a tree at v7.4-rc2-492-g533ec433efdc, not to the 7.3.5
+sources the test kernel is built from. The outputs under "Observed" come
+from the router lab in the test VM, on 2026-11-21, with the 7.3.5 kernel
+of `out/kernel`, Kathara 3.8.4 and the helpers as they were before they
+were rewritten on 2026-11-22; the boot options of the UML did not change.
 
 ## The pieces
 
@@ -37,20 +39,20 @@ are processes of the container too.
 For a device with the `kernel` option, `DockerMachine.create()`:
 
 - resolves the path: relative to the lab directory, through the lab
-  filesystem, with links resolved (`DockerMachine.py:336-338`); the file
-  must exist (`:339-340`);
-- mounts it read-only on `/kathara-uml-kernel` (`:342`) and sets
-  `KATHARA_UML_IFACES` to the number of interfaces (`:343`);
+  filesystem, with links resolved (`DockerMachine.py:337-339`); the file
+  must exist (`:340-341`);
+- mounts it read-only on `/kathara-uml-kernel` (`:343`) and sets
+  `KATHARA_UML_IFACES` to the number of interfaces (`:344`);
 - sets the label `uml`, the shell label to `/kathara-uml/ushell` and the
-  entrypoint to `/kathara-uml/start` (`:377-380`);
-- copies the three helpers into `/kathara-uml` (`:415-416`).
+  entrypoint to `/kathara-uml/start` (`:378-381`);
+- copies the three helpers into `/kathara-uml` (`:416-417`).
 
 `DockerMachine.start()` starts the container, then connects the
 interfaces after the first one, which Kathara does only after the start
-(`:546-555`), then touches `/run/kathara-uml.ready` (`:563-565`), then runs
-the startup commands as `<shell> -c <commands>` (`:586`). `connect` runs
-the shell label (`:702-703`), and `exec` of a UML device runs the
-command as `<shell> -c <command>` (`:834-835`). With the shell label set
+(`:555-563`), then touches `/run/kathara-uml.ready` (`:571-573`), then runs
+the startup commands as `<shell> -c <commands>` (`:594`). `connect` runs
+the shell label (`:710-711`), and `exec` of a UML device runs the
+command as `<shell> -c <command>` (`:842-843`). With the shell label set
 to `ushell`, all three go into the UML.
 
 ## Boot sequence
@@ -263,13 +265,13 @@ open in the UML while the host changes it was not tested.
 
 ```
  kathara exec r "ip -br addr"
-   -> exec(): ["/kathara-uml/ushell", "-c", "ip -br addr"]      DockerMachine.py:834-835
+   -> exec(): ["/kathara-uml/ushell", "-c", "ip -br addr"]      DockerMachine.py:842-843
    -> docker exec in container r
    -> ushell: ssh -T root@169.254.77.2 -- "ip -br addr"          UmlHelpers.py:169-172
    -> sshd in the UML runs it, the output and the exit code come back
 
  kathara connect r
-   -> the shell label: /kathara-uml/ushell                     DockerMachine.py:702-703
+   -> the shell label: /kathara-uml/ushell                     DockerMachine.py:710-711
    -> ushell: ssh -t root@169.254.77.2                          UmlHelpers.py:173
 ```
 
