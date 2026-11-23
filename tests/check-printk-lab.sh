@@ -7,22 +7,23 @@
 # which loads the socket filter of prog.c, runs it once and reads its line
 # from the trace buffer of r's kernel.
 #
-#   check-printk-lab.sh <UML kernel>
+#   check-printk-lab.sh [UML kernel]   (default: uml-kernel/prebuilt/linux)
 #
 # Prints one OK/FAIL line per check and exits non-zero if one failed.
 
 # shellcheck source=lib.sh source-path=SCRIPTDIR
 . "$(dirname "$0")/lib.sh"
 
+HERE=$(cd "$(dirname "$0")" && pwd)
+KERNEL=$(realpath "${1:-$HERE/../uml-kernel/prebuilt/linux}")
 IMAGE=kathara-uml/printk-test
 
-if [ ! -f "$1" ]; then
-	echo "usage: $0 <UML kernel>" >&2
+if [ ! -f "$KERNEL" ]; then
+	echo "usage: $0 [UML kernel]" >&2
 	exit 1
 fi
-KERNEL=$(realpath "$1")
 
-if ! docker build -q -t "$IMAGE" "$(dirname "$0")/../image/printk-test" >/dev/null; then
+if ! docker build -q -t "$IMAGE" "$HERE/../image/printk-test" >/dev/null; then
 	echo "FAIL test image"
 	exit 1
 fi

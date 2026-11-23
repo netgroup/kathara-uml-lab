@@ -11,7 +11,7 @@
 # already running is not touched. Run it where Kathara is, for example in
 # the test VM: `vm/vm.sh ssh bash /opt/kathara-uml/tests/check-settings.sh`.
 #
-#   check-settings.sh [UML kernel]   (default: out/kernel/linux)
+#   check-settings.sh [UML kernel]   (default: uml-kernel/prebuilt/linux)
 #
 # Prints one OK/FAIL line per check and exits non-zero if one failed.
 
@@ -19,7 +19,7 @@
 . "$(dirname "$0")/lib.sh"
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-KERNEL=$(realpath "${1:-$HERE/../out/kernel/linux}")
+KERNEL=$(realpath "${1:-$HERE/../uml-kernel/prebuilt/linux}")
 SYSCTLS=(net.ipv4.ip_forward net.ipv4.conf.all.rp_filter net.ipv4.conf.default.rp_filter
 	net.ipv4.conf.lo.rp_filter net.ipv4.icmp_ratelimit net.ipv6.conf.all.forwarding
 	net.ipv6.conf.all.disable_ipv6 net.ipv6.conf.default.disable_ipv6

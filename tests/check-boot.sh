@@ -14,7 +14,7 @@
 # already running is not touched. Run it where Kathara is, for example in
 # the test VM: `vm/vm.sh ssh bash /opt/kathara-uml/tests/check-boot.sh`.
 #
-#   check-boot.sh [UML kernel]   (default: out/kernel/linux)
+#   check-boot.sh [UML kernel]   (default: uml-kernel/prebuilt/linux)
 #
 # Prints one OK/FAIL line per check and exits non-zero if one failed.
 
@@ -22,7 +22,7 @@
 . "$(dirname "$0")/lib.sh"
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-KERNEL=$(realpath "${1:-$HERE/../out/kernel/linux}")
+KERNEL=$(realpath "${1:-$HERE/../uml-kernel/prebuilt/linux}")
 # Well below the 120 s that Kathara waits for a UML kernel to boot.
 MAX_TIME=60
 LABS=()

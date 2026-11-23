@@ -1,0 +1,7 @@
+release: 7.3.5
+source: kernel.org linux-7.3.5
+fragments: 0-base.fragment 1-trace.fragment 2-net.fragment 
+patches: 0001-bpf-Build-bpf_trace_printk-without-BPF_EVENTS.patch
+glibc needed: GLIBC_2.34
+built in: Debian GNU/Linux 12 (bookworm), gcc (Debian 12.2.0-14+deb12u1) 12.2.0
+b604d4a7e95d0969f816bbf1201bb9cf8401ecdc8f86595c3fd2823e9b31c85a  linux

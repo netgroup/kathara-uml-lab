@@ -10,9 +10,9 @@
 #
 # It uses a copy of examples/router in a temporary directory, so a lab
 # already running is not touched. Run it where Kathara is, for example in
-# the test VM: `vm/vm.sh ssh bash /opt/kathara-uml/tests/check-net.sh <kernel>`.
+# the test VM: `vm/vm.sh ssh bash /opt/kathara-uml/tests/check-net.sh`.
 #
-#   check-net.sh <UML kernel>
+#   check-net.sh [UML kernel]   (default: uml-kernel/prebuilt/linux)
 #
 # Prints one OK/FAIL line per check and exits non-zero if one failed.
 
@@ -20,6 +20,7 @@
 . "$(dirname "$0")/lib.sh"
 
 HERE=$(cd "$(dirname "$0")" && pwd)
+KERNEL=$(realpath "${1:-$HERE/../uml-kernel/prebuilt/linux}")
 IMAGE=kathara-uml/net-test
 
 setup_lab()
@@ -116,11 +117,10 @@ check_iptables()
 	in_r "iptables -t nat -D POSTROUTING -o eth1 -j MASQUERADE"
 }
 
-if [ ! -f "$1" ]; then
-	echo "usage: $0 <UML kernel>" >&2
+if [ ! -f "$KERNEL" ]; then
+	echo "usage: $0 [UML kernel]" >&2
 	exit 1
 fi
-KERNEL=$(realpath "$1")
 
 if ! docker build -q -t "$IMAGE" "$HERE/../image/net-test" >/dev/null; then
 	echo "FAIL test image"

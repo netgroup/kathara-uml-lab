@@ -25,9 +25,6 @@
       help a UML kernel (`SLUB_DEBUG=n`, `CC_OPTIMIZE_FOR_PERFORMANCE`,
       `CPU_MITIGATIONS=n`, ...): keep those that exist on UML, measure
       with `tests/bench-uml.sh`, make it the default only if it helps.
-- [ ] **Prebuilt kernel**, attached to a release of this repository,
-      with a script that fetches it and checks its sha256, so a lab does
-      not need a kernel build first.
 - [ ] **exec of a program in the background.** `kathara exec r "bash -c
       'prog &'"` waits in a UML device as long as `prog` runs (observed:
       still waiting after 20 s, 4 s in a container), because `prog` keeps

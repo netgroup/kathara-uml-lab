@@ -40,8 +40,10 @@ OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
 containers, `r` is a router on a UML kernel, and its `r.startup` is a
 normal startup file that configures `eth0` and `eth1`. Its
 `r[kernel]="kernel/linux"` goes through `kernel`, a link to
-`../../out/kernel`: point the link elsewhere (`ln -sfn`) to run `r` on
-another kernel. Links in the path are resolved before the mount.
+`../../uml-kernel/prebuilt`, so it runs on the [prebuilt
+kernel](#the-kernel) as it is cloned: point the link elsewhere
+(`ln -sfn`) to run `r` on another kernel. Links in the path are resolved
+before the mount.
 
 The other options of the device work as on a container: the UML gets its
 sysctls, the MAC addresses of its interfaces, its memory limit, its
@@ -143,6 +145,16 @@ used by the tests below.
 
 ## The kernel
 
+[uml-kernel/prebuilt](uml-kernel/prebuilt) has a kernel ready to use:
+`linux` is a link to `linux-7.3.5`, Linux 7.3.5 from kernel.org with the
+patch of [uml-kernel/patches/7.3](uml-kernel/patches/7.3), which is not
+in Linux, and with base.fragment, trace.fragment and net.fragment. Next
+to it are its config, its BUILD-INFO and `SHA256SUMS`. It runs on an
+x86-64 host, in images with glibc 2.34 or newer, as `kathara/base`. It
+is rebuilt, tested and committed when it needs to change, not at every
+stable release of Linux.
+
+To build another kernel,
 [uml-kernel/build.sh](uml-kernel/build.sh) builds it in a podman container,
 nothing is installed on the host:
 
@@ -226,31 +238,26 @@ container, with [tests/uml-run.sh](tests/uml-run.sh), and checks that
 (`refused`).
 [tests/check-printk-lab.sh](tests/check-printk-lab.sh) checks it from
 inside a UML device of a lab, through `kathara exec`. Both run
-`/printk/run.sh` of the test image and take the kernel as argument:
+`/printk/run.sh` of the test image. check-printk.sh takes the kernel
+as argument, check-printk-lab.sh runs on the prebuilt kernel unless
+given another:
 
 ```
-uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment --out out/printk
 vm/vm.sh install
-vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/printk &&
-	cat > /opt/kathara-uml/out/printk/linux && chmod 755 /opt/kathara-uml/out/printk/linux' < out/printk/linux
-vm/vm.sh ssh bash /opt/kathara-uml/tests/check-printk-lab.sh /opt/kathara-uml/out/printk/linux
+vm/vm.sh ssh bash /opt/kathara-uml/tests/check-printk-lab.sh
 ```
 
 [tests/check-net.sh](tests/check-net.sh) checks tc, netfilter and XDP
 inside a UML device: a netem delay, a classic and an eBPF tc filter, a
 generic XDP program, an iptables FORWARD rule and a MASQUERADE. The eBPF
 programs write a line per drop with `bpf_printk()`, which the test looks
-for in the trace buffer of the UML. It needs a kernel built with
-net.fragment and trace.fragment, and it builds its image from
-[image/net-test](image/net-test):
+for in the trace buffer of the UML. It needs a kernel with net.fragment
+and trace.fragment, as the prebuilt one, which it runs on unless given
+another, and it builds its image from [image/net-test](image/net-test):
 
 ```
-uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment \
-	--fragment uml-kernel/net.fragment --out out/kernel-net
 vm/vm.sh install
-vm/vm.sh ssh 'mkdir -p /opt/kathara-uml/out/kernel-net &&
-	cat > /opt/kathara-uml/out/kernel-net/linux && chmod 755 /opt/kathara-uml/out/kernel-net/linux' < out/kernel-net/linux
-vm/vm.sh ssh bash /opt/kathara-uml/tests/check-net.sh /opt/kathara-uml/out/kernel-net/linux
+vm/vm.sh ssh bash /opt/kathara-uml/tests/check-net.sh
 ```
 
 The tests share their helpers, `check`, `finish` and a few others, in
