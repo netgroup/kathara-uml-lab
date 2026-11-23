@@ -320,3 +320,10 @@ the seccomp mode of UML, meant to cut that cost, does not start:
 `failed to fetch registers: -22` (from `get_stub_state()`, when
 `get_fpstate()` returns NULL in `arch/x86/um/os-Linux/mcontext.c`), so
 only the ptrace mode is left. The cause under TCG was not found.
+
+## License
+
+GPL-2.0, see [LICENSE](LICENSE): the kernel patch must be, as the kernel
+is, and the eBPF programs of the test images call `bpf_printk()`, which
+only GPL-compatible programs may use. The `kathara` submodule is Kathará,
+under its own license.
