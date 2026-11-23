@@ -138,10 +138,12 @@ uml-kernel/build.sh --fetch 7.3.5 --fragment uml-kernel/trace.fragment
 ```
 
 In a device on that kernel the lines of `bpf_printk()` are in the trace
-buffer of the UML kernel: mount tracefs on `/sys/kernel/tracing` and read
-`trace`. [image/printk-test](image/printk-test) is a device
-image with bpftool, clang and a socket filter that calls `bpf_printk()`,
-used by the tests below.
+buffer of the UML kernel, on the tracefs that `init` mounts:
+`kathara exec r "cat /sys/kernel/tracing/trace"`, or `bpftool prog
+tracelog` in an image that has bpftool.
+[image/printk-test](image/printk-test) is a device image with bpftool,
+clang and a socket filter that calls `bpf_printk()`, used by the tests
+below.
 
 ## The kernel
 
