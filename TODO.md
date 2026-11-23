@@ -5,8 +5,8 @@
 - [ ] **Images without OpenSSH** (low priority). The UML runs on the
       image of the device, and the Kathara images seen (kathara/base,
       kathara/frr) have the OpenSSH client and server, iproute2 and glibc.
-      Only for an image without OpenSSH: a static dropbear (prototype in
-      `out/dropbear`, not in git) copied with the helpers.
+      Only for an image without OpenSSH: a static dropbear copied with
+      the helpers (tried as a prototype, not in this repository).
 - [ ] **Kernel modules.** UML supports them (`CONFIG_MODULES=y` in
       `arch/um/configs/x86_64_defconfig`); base.fragment turns them off.
       1. build.sh checks every option of every fragment, so a fragment
@@ -25,37 +25,14 @@
       help a UML kernel (`SLUB_DEBUG=n`, `CC_OPTIMIZE_FOR_PERFORMANCE`,
       `CPU_MITIGATIONS=n`, ...): keep those that exist on UML, measure
       with `tests/bench-uml.sh`, make it the default only if it helps.
-- [ ] **Prebuilt test kernel**, attached to a release of the fork, so a
-      lab does not need a kernel build first.
+- [ ] **Prebuilt kernel**, attached to a release of this repository,
+      with a script that fetches it and checks its sha256, so a lab does
+      not need a kernel build first.
 - [ ] **exec of a program in the background.** `kathara exec r "bash -c
       'prog &'"` waits in a UML device as long as `prog` runs (observed:
       still waiting after 20 s, 4 s in a container), because `prog` keeps
       the output of the ssh session open. A fix must keep the output of
       the command while it runs.
-- [ ] **Kubernetes manager**: only the Docker manager knows the kernel
-      option today.
-
-## Seen in the tests, not explained
-
-- [ ] **A router run that failed.** One run of `check-router.sh` out of
-      five, the first after a boot of the test VM (2026-11-22): `exec r`
-      printed nothing and the startup of r did not run. A race found
-      since, the key of ushell made 40 ms after the ready file and ssh
-      without the key exiting at once with 255, is fixed in the fork.
-      After the fix 10 runs passed, 3 of them the first after a boot,
-      and then 20 cycles of boot, install and check-router.sh as the
-      first lab (Kathara 21b6c44, a315168 after the brace rewrite,
-      2026-11-22, out/boot-cycles.log);
-      that the race was the only cause is not proven.
-- [ ] **SIGSTOP in the UML.** In the seccomp mode, `kill -STOP` of the
-      sshd listener inside the UML: `ps` shows it as `Ts`, yet new
-      connections still get the ssh banner (UML 7.3.5). Not tried in the
-      ptrace mode.
-- [ ] **A test that did not clean.** One run of `check-ushell.sh` out of
-      four left its lab running and its directory in /tmp: the EXIT trap
-      did not run its `kathara lclean`. Three more runs, one with
-      `bash -x`, cleaned, and so did the 20 runs of the boot cycles
-      (no container and no lab left after any of them).
 
 ## Patches
 
@@ -76,6 +53,19 @@
 - [ ] **Tests in Kathara.** Kathara runs only the pytest tests of the
       fork; the lab tests of this repository run in the test VM. Find out
       what the authors of Kathara would want in their own test suite.
+- [ ] **vstart.** `kathara vstart` makes a device from the command line,
+      with options such as `--image`, `--mem` and `--sysctl`, but it has
+      no option for the kernel.
+- [ ] **Remote Docker.** With `remote_url` the kernel is mounted from a
+      path of the local host, and a remote Docker looks for it on its own
+      host (not tried). Copying the kernel into the container, as the
+      helpers are, may work in both cases.
+- [ ] **lab.links.** The collision domains of `lab.links` (Kathara 3.9.0:
+      point-to-point, hub, external networks) are not tried with UML
+      devices.
+- [ ] **The proposal.** An Added entry in CHANGELOG.md, and the issue
+      with the use cases and the pull request that CONTRIBUTING.md asks
+      for a new feature.
 
 ## Elsewhere
 
