@@ -4,8 +4,7 @@
 # Test VM for UML devices: a Debian 13 VM under KVM, with QEMU in a podman
 # container. Docker, this tree with the Kathara of its submodule and the
 # device image are installed INSIDE the VM, so the tests touch neither the
-# host's Docker nor its network. Everything lives in the work dir:
-# UML_LAB_WORK, default out.
+# host's Docker nor its network. Everything lives in out.
 #
 #   vm.sh start          create (first time) and boot the VM, wait for ssh
 #   vm.sh install        copy this tree (and out/kernel/linux) into the
@@ -13,16 +12,16 @@
 #   vm.sh test           run tests/check-router.sh and check-shared.sh
 #   vm.sh ssh [cmd...]   a command (or a shell) in the VM
 #   vm.sh stop           shut the VM down and remove its container (its
-#                        disk stays in the work dir)
+#                        disk stays in out/vm)
 #
 # VM_MEM (default 6G) and VM_CPUS (default 4) size the VM. /dev/kvm is
 # needed; when the user cannot open it, podman runs through sudo, and the
-# VM files in the work dir are then owned by root.
+# VM files in out/vm are then owned by root.
 set -o pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(dirname "$HERE")
-WORK=${UML_LAB_WORK:-$REPO/out}
+WORK=$REPO/out
 V=$WORK/vm
 NAME=kathara-uml-vm
 IMAGE=localhost/kathara-uml-vm

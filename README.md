@@ -157,7 +157,7 @@ is rebuilt, tested and committed when it needs to change, not at every
 stable release of Linux.
 
 To build another kernel,
-[uml-kernel/build.sh](uml-kernel/build.sh) builds it in a podman container,
+[uml-kernel/build.sh](uml-kernel/build.sh) builds it in a Docker container,
 nothing is installed on the host:
 
 ```

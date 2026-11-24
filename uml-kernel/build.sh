@@ -1,7 +1,7 @@
 #!/bin/bash
 # author: Andrea Mayer <andrea.mayer@uniroma2.it>
 #
-# Build a UML kernel for Kathara devices, in a podman container (nothing is
+# Build a UML kernel for Kathara devices, in a Docker container (nothing is
 # installed on the host). The result is a stripped `linux` binary that a
 # lab uses with dev[kernel]="<path>".
 #
@@ -24,14 +24,13 @@
 #            linux.config, BUILD-INFO, make.log and, with --fetch, the
 #            tarball; the objects and the unpacked sources are removed.
 #
-# UML_LAB_WORK sets where podman keeps its storage (default out). The build
-# itself is build-in-container.sh, run in the builder container.
+# The build itself is build-in-container.sh, run in the builder container
+# as the user, so that the files in <out> are the user's.
 set -o pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-WORK=${UML_LAB_WORK:-$(dirname "$HERE")/out}
-IMAGE=localhost/kathara-uml-kernel-builder
-OUT=$WORK/kernel
+IMAGE=kathara-uml/kernel-builder
+OUT=$(dirname "$HERE")/out/kernel
 SRC=
 FETCH=
 NO_PATCHES=
@@ -104,17 +103,16 @@ container_mounts()
 
 parse_args "$@"
 
-mkdir -p "$OUT" "$WORK/podman" "$WORK/tmp" || die "cannot create $OUT"
+mkdir -p "$OUT" || die "cannot create $OUT"
 OUT=$(cd "$OUT" && pwd)
-export TMPDIR=$WORK/tmp
-PM=(podman --root "$WORK/podman/storage" --runroot "$WORK/podman/run")
 
-if ! "${PM[@]}" build -q -t "$IMAGE" "$HERE" > "$OUT/image.log" 2>&1; then
+if ! docker build -q -t "$IMAGE" -f "$HERE/Containerfile" "$HERE" > "$OUT/image.log" 2>&1; then
 	cat "$OUT/image.log"
 	die "builder image failed"
 fi
 
 container_mounts
-"${PM[@]}" run --rm -e FETCH="$FETCH" -e NO_PATCHES="$NO_PATCHES" -e JOBS="${JOBS:-$(nproc)}" \
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+	-e FETCH="$FETCH" -e NO_PATCHES="$NO_PATCHES" -e JOBS="${JOBS:-$(nproc)}" \
 	"${mounts[@]}" "$IMAGE" bash /build-in-container.sh || die "build failed, see $OUT/make.log"
 echo "kernel: $OUT/linux"
