@@ -36,14 +36,14 @@ r[kernel]="/path/to/linux"
 directory, as the other files of the lab. `image` must have the
 OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
 
-[examples/router](examples/router) is a complete lab: `a` and `b` are
-containers, `r` is a router on a UML kernel, and its `r.startup` is a
-normal startup file that configures `eth0` and `eth1`. Its
-`r[kernel]="kernel/linux"` goes through `kernel`, a link to
-`../../uml-kernel/prebuilt`, so it runs on the [prebuilt
-kernel](#the-kernel) as it is cloned: point the link elsewhere
-(`ln -sfn`) to run `r` on another kernel. Links in the path are resolved
-before the mount.
+[examples/router](examples/router) ([README](examples/router/README.md))
+is a complete lab: `a` and `b` are containers, `r` is a router on a UML
+kernel, and its `r.startup` is a normal startup file that configures
+`eth0` and `eth1`. Its `r[kernel]="kernel/linux"` goes through `kernel`, a
+link to `../../uml-kernel/prebuilt`, so it runs on the [prebuilt
+kernel](#the-kernel) as it is cloned: point the link elsewhere (`ln -sfn`)
+to run `r` on another kernel. Links in the path are resolved before the
+mount.
 
 The other options of the device work as on a container: the UML gets its
 sysctls, the MAC addresses of its interfaces, its memory limit, its
