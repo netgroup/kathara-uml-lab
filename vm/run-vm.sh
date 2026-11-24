@@ -67,6 +67,6 @@ mkdir -p logs
 python3 -m http.server 8000 -d /vm/seed > logs/seed-http.log 2>&1 &
 exec qemu-system-x86_64 -accel kvm -cpu host -m "${VM_MEM:-6G}" -smp "${VM_CPUS:-4}" \
 	-display none -monitor none -serial file:/vm/logs/serial.log \
-	-drive file=/vm/img/vm.qcow2,if=virtio \
+	-drive file=/vm/img/vm.qcow2,if=virtio,discard=unmap \
 	-nic user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:2222-:22 \
 	-smbios 'type=1,serial=ds=nocloud;s=http://10.0.2.2:8000/'
