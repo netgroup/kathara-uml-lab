@@ -45,11 +45,27 @@ kernel](#the-kernel) as it is cloned: point the link elsewhere (`ln -sfn`)
 to run `r` on another kernel. Links in the path are resolved before the
 mount.
 
+An image can also carry its own UML kernel, so that a lab needs no
+kernel file next to it. The label `org.kathara.uml.kernel` of the image
+names the absolute path of the kernel in the image, and a device on that
+image runs on it with no `kernel` option:
+
+```
+FROM kathara/base
+COPY linux /usr/lib/kathara-uml/linux
+LABEL org.kathara.uml.kernel=/usr/lib/kathara-uml/linux
+```
+
+The `kernel` option, when given, takes the place of the kernel of the
+image, and a device on an image without the label is a plain container.
+lstart prints a line for each device that runs on the kernel of its
+image.
+
 The other options of the device work as on a container: the UML gets its
 sysctls, the MAC addresses of its interfaces, its memory limit, its
 environment, its shell, its ulimits and, with `bridged`, the bridged
 interface with its published ports. `entrypoint` and `args` cannot be
-used with `kernel`: the UML kernel is the entrypoint of the container,
+used on a UML device: the UML kernel is the entrypoint of the container,
 and programs start from the startup file. See [Settings of a
 device](ARCHITECTURE.md#settings-of-a-device).
 
@@ -57,12 +73,13 @@ device](ARCHITECTURE.md#settings-of-a-device).
 
 [ARCHITECTURE.md](ARCHITECTURE.md) has the details: the boot sequence,
 the network path of a packet, every boot option of the UML and what it
-is for, the files and the shell. In short, for a device with `kernel`,
-Kathara
+is for, the files and the shell. In short, for a UML device Kathara
 ([DockerMachine.py](kathara/src/Kathara/manager/docker/DockerMachine.py)):
 
-1. creates the container with the kernel mounted read-only in
-   `/kathara-uml-kernel`, the entrypoint `/kathara-uml/start`, the shell
+1. creates the container with the kernel of `kernel` mounted read-only
+   in `/kathara-uml-kernel`, or with `KATHARA_UML_KERNEL` set to the
+   path of the kernel of the image, the entrypoint `/kathara-uml/start`,
+   the shell
    `/kathara-uml/ushell`, the label `uml` and `KATHARA_UML_IFACES` (the
    number of interfaces), and copies the helpers of
    [UmlHelpers.py](kathara/src/Kathara/manager/docker/UmlHelpers.py) into
@@ -234,6 +251,12 @@ the reason and within seconds, and leaves no container behind, when r is
 on a file that is not a UML kernel and on a UML kernel with too little
 memory, whose container exits (4M), or whose kernel panics or container
 exits, from one boot to the next (16M).
+[tests/check-image-kernel.sh](tests/check-image-kernel.sh) builds an
+image with the prebuilt kernel and the label, and checks that r runs on
+it without `kernel`, on the kernel of the option with `kernel`, and as a
+container on `kathara/base`, and that a label that is not an absolute
+path, or names a missing file or a file that is not a UML kernel, stops
+lstart with the reason and leaves no container behind.
 [tests/check-printk.sh](tests/check-printk.sh) boots a UML kernel in a
 container, with [tests/uml-run.sh](tests/uml-run.sh), and checks that
 `bpf_printk()` works (`printk`) or is refused because of the helper
