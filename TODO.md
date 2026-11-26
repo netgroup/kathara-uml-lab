@@ -63,6 +63,21 @@
 - [ ] **The proposal.** An Added entry in CHANGELOG.md, and the issue
       with the use cases and the pull request that CONTRIBUTING.md asks
       for a new feature.
+- [ ] **Images whose tag is an OCI image manifest** (report it to
+      Kathara, not a UML change). Before it pulls an image, Kathara goes
+      through `image.attrs['Platforms']` of the registry data
+      (`_check_image_architecture()` in `DockerImage.py`, line 201 on
+      `develop` at 95328a0). When the tag of the image is an OCI image
+      manifest, not an index, Docker gives `Platforms: None`, and lstart
+      stops with "'NoneType' object is not iterable". In the test VM,
+      with Docker 26.1.5, a test image FROM kathara/base gave its
+      platform and started with a Docker v2 manifest, and gave none and
+      stopped lstart with the same manifest written with the OCI media
+      types.
+      Docker 29, with the containerd image store, pushed the image of the
+      GOB lab as an OCI image manifest. An OCI index with the platform of
+      the image works. Not reported yet: no issue or pull request matched
+      in the search of 2026-11-26.
 
 ## Elsewhere
 
