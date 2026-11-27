@@ -2,7 +2,7 @@
 
 Kathara devices are containers, so they all share the kernel of the host.
 With the Kathara of [kathara](kathara) a device can run on its own kernel
-instead: a
+instead, carried by its image or given in `lab.conf`: a
 [User-Mode Linux](https://docs.kernel.org/virt/uml/user_mode_linux_howto_v2.html)
 (UML) kernel, which runs as a process inside the device's container. The
 rest of the lab does not change: the other devices are plain containers,
@@ -23,7 +23,32 @@ git clone --recurse-submodules <this repository>
 
 ## Usage
 
-One line in `lab.conf`:
+A device runs on a UML kernel in one of two ways: the kernel comes with
+the image of the device, or `lab.conf` names a kernel file.
+
+An image can carry its own UML kernel. A lab then needs nothing more than
+the image, and `lab.conf` names it as for any other device:
+
+```
+r[0]="A"
+r[1]="B"
+r[image]="<an image with a UML kernel>"
+```
+
+The label `org.kathara.uml.kernel` of the image names the absolute path
+of the kernel in the image. An image FROM `kathara/base` gets it this
+way:
+
+```
+FROM kathara/base
+COPY linux /usr/lib/kathara-uml/linux
+LABEL org.kathara.uml.kernel=/usr/lib/kathara-uml/linux
+```
+
+lstart prints a line for each device that runs on the kernel of its
+image, and a device on an image without the label is a plain container.
+
+The `kernel` option runs a device on a kernel file instead:
 
 ```
 r[0]="A"
@@ -33,8 +58,10 @@ r[kernel]="/path/to/linux"
 ```
 
 `kernel` is a UML kernel binary. A relative path is relative to the lab
-directory, as the other files of the lab. `image` must have the
-OpenSSH client and server, as `kathara/base` has (see [Image](#image)).
+directory, as the other files of the lab. When the image also has a
+kernel, the `kernel` option takes its place. In both cases the image must
+have the OpenSSH client and server, as `kathara/base` has (see
+[Image](#image)).
 
 [examples/router](examples/router) ([README](examples/router/README.md))
 is a complete lab: `a` and `b` are containers, `r` is a router on a UML
@@ -44,22 +71,6 @@ link to `../../uml-kernel/prebuilt`, so it runs on the [prebuilt
 kernel](#the-kernel) as it is cloned: point the link elsewhere (`ln -sfn`)
 to run `r` on another kernel. Links in the path are resolved before the
 mount.
-
-An image can also carry its own UML kernel, so that a lab needs no
-kernel file next to it. The label `org.kathara.uml.kernel` of the image
-names the absolute path of the kernel in the image, and a device on that
-image runs on it with no `kernel` option:
-
-```
-FROM kathara/base
-COPY linux /usr/lib/kathara-uml/linux
-LABEL org.kathara.uml.kernel=/usr/lib/kathara-uml/linux
-```
-
-The `kernel` option, when given, takes the place of the kernel of the
-image, and a device on an image without the label is a plain container.
-lstart prints a line for each device that runs on the kernel of its
-image.
 
 The other options of the device work as on a container: the UML gets its
 sysctls, the MAC addresses of its interfaces, its memory limit, its
